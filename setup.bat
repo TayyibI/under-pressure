@@ -25,6 +25,8 @@ if not defined PY call :try_path "%ProgramData%\anaconda3\python.exe"
 if not defined PY call :try_path "%ProgramData%\miniconda3\python.exe"
 if not defined PY call :try_path "C:\anaconda3\python.exe"
 for %%V in (314 313 312 311 310) do if not defined PY call :try_path "%LOCALAPPDATA%\Programs\Python\Python%%V\python.exe"
+for %%V in (314 313 312 311 310) do if not defined PY call :try_path "C:\Python%%V\python.exe"
+for %%V in (314 313 312 311 310) do if not defined PY call :try_path "%ProgramFiles%\Python%%V\python.exe"
 if defined PY goto :found_py
 echo     Could not find Python 3.10 or newer.
 echo     Install it from https://www.python.org/downloads/ and tick "Add python.exe to PATH", then run this again.
