@@ -31,7 +31,7 @@ async def run_screens(llm, profiles: dict, out_path: Path, screeners, models, re
     jobs = plan_jobs(profiles, screeners, models, repeats, limit_ids)
     done_keys = set()
     if out_path.exists():
-        for line in out_path.read_text().splitlines():
+        for line in out_path.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 d = json.loads(line)
                 if "error" not in d:
@@ -39,7 +39,7 @@ async def run_screens(llm, profiles: dict, out_path: Path, screeners, models, re
     todo = [j for j in jobs if (j[0], j[2], j[3], j[4], j[5]) not in done_keys]
     print(f"  {len(jobs)} screening jobs planned, {len(todo)} to run")
     prog = Progress(len(todo), "screens")
-    fh = out_path.open("a")
+    fh = out_path.open("a", encoding="utf-8")
 
     async def one(pid, bid, variant, s, m, r):
         try:

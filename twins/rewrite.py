@@ -83,7 +83,7 @@ async def rewrite_one(llm, person: Person, plain: str, style: str, model: str) -
 
 
 async def rewrite_all(llm, people: list[Person], data_dir: Path, model: str) -> dict:
-    profiles = json.loads((data_dir / "profiles.json").read_text())
+    profiles = json.loads((data_dir / "profiles.json").read_text(encoding="utf-8"))
     jobs = [(p, s) for p in people for s in STYLE_PROMPTS if s not in profiles[p.id]]
     prog = Progress(len(jobs), "rewrites")
     failures: dict[str, list[str]] = {}
@@ -98,8 +98,8 @@ async def rewrite_all(llm, people: list[Person], data_dir: Path, model: str) -> 
 
     await asyncio.gather(*(run(p, s) for p, s in jobs))
     profiles_meta = {"generator_model": model, "failed_rewrites": failures}
-    (data_dir / "profiles.json").write_text(json.dumps(profiles, indent=2))
-    (data_dir / "rewrite_meta.json").write_text(json.dumps(profiles_meta, indent=2))
+    (data_dir / "profiles.json").write_text(json.dumps(profiles, indent=2), encoding="utf-8")
+    (data_dir / "rewrite_meta.json").write_text(json.dumps(profiles_meta, indent=2), encoding="utf-8")
     if failures:
         print(f"  {len(failures)} rewrites failed the fact check and are excluded: {sorted(failures)[:6]}...")
     return profiles

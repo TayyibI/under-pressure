@@ -28,17 +28,17 @@ VARIANTS = ("plain", "polished", "verbose", "sparse")
 
 
 def load_results(path: Path) -> tuple[dict, int]:
-    recs, errors = {}, 0
-    for line in path.read_text().splitlines():
+    recs, failed = {}, set()
+    for line in path.read_text(encoding="utf-8").splitlines():
         if not line.strip():
             continue
         d = json.loads(line)
         k = (d["person"], d["variant"], d["screener"], d["model"], d["repeat"])
         if "error" in d:
-            errors += 1
+            failed.add(k)
             continue
         recs[k] = d
-    return recs, errors
+    return recs, len(failed - set(recs))
 
 
 def _boot_ci(values: list[float], rng: np.random.Generator, n: int = 2000) -> tuple[float, float]:
@@ -56,8 +56,8 @@ def _rate(xs: list[bool]) -> float | None:
 
 def analyze(results_path: Path, data_dir: Path, models: list[str], screeners: list[str], repeats: int) -> dict:
     recs, n_errors = load_results(results_path)
-    truth = {p["id"]: p for p in json.loads((data_dir / "truth.json").read_text())}
-    profiles = json.loads((data_dir / "profiles.json").read_text())
+    truth = {p["id"]: p for p in json.loads((data_dir / "truth.json").read_text(encoding="utf-8"))}
+    profiles = json.loads((data_dir / "profiles.json").read_text(encoding="utf-8"))
     rng = np.random.default_rng(0)
 
     metrics: dict = {}

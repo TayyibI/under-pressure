@@ -88,9 +88,9 @@ def test_mock_pipeline_end_to_end(tmp_path: Path):
     r = subprocess.run([sys.executable, "-m", "twins", "all", "--mock", "--quick", "--workdir", str(wd)],
                        capture_output=True, text=True, cwd=Path(__file__).resolve().parents[1])
     assert r.returncode == 0, r.stderr
-    summary = json.loads((wd / "results" / "summary.json").read_text())
+    summary = json.loads((wd / "results" / "summary.json").read_text(encoding="utf-8"))
     assert summary["meta"]["mock"] is True
     assert summary["errors"] == 0
     m = summary["metrics"][summary["meta"]["models"][0]]
     assert set(m) == {"naive", "instructed", "facts_first"}
-    assert (wd / "results" / "index.html").read_text().count("MOCK RUN") >= 1
+    assert (wd / "results" / "index.html").read_text(encoding="utf-8").count("MOCK RUN") >= 1

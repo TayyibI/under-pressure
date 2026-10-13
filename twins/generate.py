@@ -219,16 +219,16 @@ def generate(per_brief: int, seed: int) -> list[Person]:
 def save(people: list[Person], data_dir: Path) -> None:
     data_dir.mkdir(parents=True, exist_ok=True)
     truth = [asdict(p) for p in people]
-    (data_dir / "truth.json").write_text(json.dumps(truth, indent=2))
+    (data_dir / "truth.json").write_text(json.dumps(truth, indent=2), encoding="utf-8")
     profiles = {
         p.id: {"brief_id": p.brief_id, "plain": render_plain(p), "sparse": render_sparse(p)}
         for p in people
     }
-    (data_dir / "profiles.json").write_text(json.dumps(profiles, indent=2))
+    (data_dir / "profiles.json").write_text(json.dumps(profiles, indent=2), encoding="utf-8")
 
 
 def load_people(data_dir: Path) -> list[Person]:
-    raw = json.loads((data_dir / "truth.json").read_text())
+    raw = json.loads((data_dir / "truth.json").read_text(encoding="utf-8"))
     out = []
     for d in raw:
         roles = [Role(**{**r, "facts": [Fact(**f) for f in r["facts"]]}) for r in d["roles"]]

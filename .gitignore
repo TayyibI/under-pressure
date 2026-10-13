@@ -5,3 +5,4 @@ run/
 run_quick/
 run_mock/
 .pytest_cache/
+setup_log.txt

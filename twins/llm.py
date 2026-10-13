@@ -49,12 +49,12 @@ class Cache:
         self.path = path
         self.data: dict[str, dict] = {}
         if path.exists():
-            for line in path.read_text().splitlines():
+            for line in path.read_text(encoding="utf-8").splitlines():
                 if line.strip():
                     rec = json.loads(line)
                     self.data[rec["key"]] = rec
         path.parent.mkdir(parents=True, exist_ok=True)
-        self._fh = path.open("a")
+        self._fh = path.open("a", encoding="utf-8")
 
     def get(self, key: str) -> dict | None:
         return self.data.get(key)
@@ -71,7 +71,7 @@ def cache_spend(path: Path) -> float:
     if not path.exists():
         return 0.0
     u = Usage()
-    for line in path.read_text().splitlines():
+    for line in path.read_text(encoding="utf-8").splitlines():
         if line.strip():
             r = json.loads(line)
             u.add(r.get("model", ""), r.get("in", 0), r.get("out", 0))
@@ -107,6 +107,9 @@ class AnthropicLLM:
                 raise SystemExit(f"Preflight failed for {m} (HTTP {e.status_code}): {e.message}\n"
                                  "Check ANTHROPIC_API_KEY, the model ID (--models / --rewrite-model) and --effort.")
         print(f"  preflight ok: {', '.join(dict.fromkeys(models))}")
+
+    async def aclose(self) -> None:
+        await self.client.close()
 
     async def complete(self, *, task: str, model: str, system: str, user: str,
                        max_tokens: int = 1500, effort: str | None = None, sample: int = 0) -> str:
@@ -161,6 +164,9 @@ class MockLLM:
 
     async def preflight(self, models, effort) -> None:
         print("  preflight skipped (mock)")
+
+    async def aclose(self) -> None:
+        pass
 
     async def complete(self, *, task: str, model: str, system: str, user: str,
                        max_tokens: int = 1500, effort: str | None = None, sample: int = 0) -> str:

@@ -84,7 +84,7 @@ def write_markdown(summary: dict, path: Path) -> None:
             lines.append(f"| {label} | " + " | ".join(fmt(by_s[s][key]) for s in screeners) + " |")
         lines.append("")
     lines += ["## Method and limits", "", METHOD_MD]
-    path.write_text("\n".join(lines))
+    path.write_text("\n".join(lines), encoding="utf-8")
 
 
 METHOD_MD = """\
@@ -112,12 +112,12 @@ def write_html(summary: dict, path: Path) -> None:
     page = page.replace("__METHOD__", "".join(
         f"<li>{html.escape(line.strip()[2:].replace('`', '').replace('*', ''))}</li>"
         for line in METHOD_MD.replace("\n  ", " ").splitlines() if line.strip().startswith("- ")))
-    path.write_text(page)
+    path.write_text(page, encoding="utf-8")
 
 
 def write_all(summary: dict, out_dir: Path) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
-    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2))
+    (out_dir / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
     write_markdown(summary, out_dir / "report.md")
     write_html(summary, out_dir / "index.html")
 

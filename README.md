@@ -30,7 +30,15 @@ Because every comparison is within the same person, any change in rating between
 
 What this repo adds: the same questions asked of a **profile-only sourcing screen**, including what happens to **sparse** profiles, plus a fix and a reusable test.
 
-## Setup (about 5 minutes)
+## Windows: double-click setup
+
+1. Double-click **`setup.bat`**. It finds Python 3.10+ (including Anaconda), creates `.venv`, installs packages, runs the tests and a free practice run with a fake model, then opens the practice report. Everything it does is logged to `setup_log.txt`.
+2. Double-click **`run_kill_test.bat`**. It asks for your API key once (and offers to remember it), runs the kill test, then opens the report.
+3. Double-click **`run_full.bat`** for the full run.
+
+Every run also writes `<run folder>/run_log.txt`.
+
+## Setup by hand (macOS / Linux / Windows)
 
 Requires Python 3.10+ and an Anthropic API key.
 

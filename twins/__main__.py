@@ -63,10 +63,34 @@ def estimate(jobs: int, models: list[str], screeners: list[str]) -> float:
     return total
 
 
+class _Tee:
+    """Mirror console output into a log file (prompts included, so input() still works)."""
+
+    def __init__(self, stream, fh):
+        self.stream, self.fh = stream, fh
+
+    def write(self, s):
+        self.stream.write(s)
+        self.fh.write(s)
+        self.stream.flush()
+        self.fh.flush()
+        return len(s)
+
+    def flush(self):
+        self.stream.flush()
+        self.fh.flush()
+
+    def __getattr__(self, name):
+        return getattr(self.stream, name)
+
+
 def main(argv=None) -> None:
     a = parse(argv if argv is not None else sys.argv[1:])
     data_dir, res_dir = a.workdir / "data", a.workdir / "results"
     data_dir.mkdir(parents=True, exist_ok=True)
+    log = (a.workdir / "run_log.txt").open("a", encoding="utf-8")
+    sys.stdout, sys.stderr = _Tee(sys.stdout, log), _Tee(sys.stderr, log)
+    print(f"\n=== {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} · twins {' '.join(argv if argv is not None else sys.argv[1:])}")
     cfg_path = a.workdir / "config.json"
     stages = ["generate", "rewrite", "screen", "report"] if a.stage == "all" else [a.stage]
 
@@ -82,7 +106,7 @@ def main(argv=None) -> None:
     if any(s in stages for s in ("rewrite", "screen")):
         # Ask once, up front, before any paid call. Upper bound: every candidate has all four variants.
         if not a.mock:
-            n_people = len(json.loads((data_dir / "truth.json").read_text()))
+            n_people = len(json.loads((data_dir / "truth.json").read_text(encoding="utf-8")))
             calls = n_people * 4 * len(a.screeners) * len(a.models) * a.repeats if "screen" in stages else 0
             est = estimate(calls, a.models, a.screeners) + (n_people * 2 * 0.03 if "rewrite" in stages else 0)
             print(f"[plan] up to {calls} screening calls on {', '.join(a.models)}"
@@ -95,6 +119,12 @@ def main(argv=None) -> None:
 
     async def llm_stages() -> None:
         # One event loop for every API call: the async HTTP client must not outlive its loop.
+        try:
+            await llm_inner()
+        finally:
+            await llm.aclose()
+
+    async def llm_inner() -> None:
         need = ([a.rewrite_model] if "rewrite" in stages else []) + (a.models if "screen" in stages else [])
         await llm.preflight(need, a.effort)
         if "rewrite" in stages:
@@ -102,10 +132,10 @@ def main(argv=None) -> None:
             print(f"[rewrite] AI-polished and verbose versions with {a.rewrite_model}")
             await rewrite.rewrite_all(llm, people, data_dir, a.rewrite_model)
         if "screen" in stages:
-            profiles = json.loads((data_dir / "profiles.json").read_text())
+            profiles = json.loads((data_dir / "profiles.json").read_text(encoding="utf-8"))
             cfg = {"models": a.models, "screeners": a.screeners, "repeats": a.repeats, "effort": a.effort,
                    "mock": a.mock, "per_brief": a.per_brief, "seed": a.seed, "rewrite_model": a.rewrite_model}
-            cfg_path.write_text(json.dumps(cfg, indent=2))
+            cfg_path.write_text(json.dumps(cfg, indent=2), encoding="utf-8")
             print(f"[screen] {', '.join(a.screeners)} x {', '.join(a.models)} x {a.repeats} repeats")
             await run.run_screens(llm, profiles, a.workdir / "results.jsonl", a.screeners, a.models,
                                   a.repeats, a.effort)
@@ -119,16 +149,16 @@ def main(argv=None) -> None:
                   f"${cache_spend(a.workdir / 'llm_cache.jsonl'):.2f}")
 
     if "report" in stages:
-        cfg = json.loads(cfg_path.read_text())
+        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
         res = analyze.analyze(a.workdir / "results.jsonl", data_dir, cfg["models"], cfg["screeners"], cfg["repeats"])
         meta_path = data_dir / "rewrite_meta.json"
-        rmeta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
+        rmeta = json.loads(meta_path.read_text(encoding="utf-8")) if meta_path.exists() else {}
         spend = cache_spend(a.workdir / "llm_cache.jsonl")
         summary = {
             "meta": {
                 "mock": cfg["mock"], "models": cfg["models"], "screeners": cfg["screeners"],
                 "repeats": cfg["repeats"], "effort": cfg["effort"],
-                "n_people": len(json.loads((data_dir / "truth.json").read_text())),
+                "n_people": len(json.loads((data_dir / "truth.json").read_text(encoding="utf-8"))),
                 "generator_model": rmeta.get("generator_model", cfg["rewrite_model"]),
                 "failed_rewrites": len(rmeta.get("failed_rewrites", {})),
                 "cost_usd": spend,
