@@ -29,6 +29,7 @@ echo Saved to your Windows user environment variables.
 if errorlevel 1 goto :failed
 if not exist "%ROOT%\run\results\index.html" goto :failed
 start "" "%ROOT%\run\results\index.html"
+if exist "%ROOT%\run\app\index.html" start "" "%ROOT%\run\app\index.html"
 echo.
 echo Done. The report has opened in your browser.
 echo Files: run\results\index.html and run\results\report.md

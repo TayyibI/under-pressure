@@ -94,3 +94,47 @@ def test_mock_pipeline_end_to_end(tmp_path: Path):
     m = summary["metrics"][summary["meta"]["models"][0]]
     assert set(m) == {"naive", "instructed", "facts_first"}
     assert (wd / "results" / "index.html").read_text(encoding="utf-8").count("Practice run with a fake model") >= 1
+    # the simulator page is built from the same run
+    app = wd / "app"
+    index, artifact = (app / "index.html").read_text(encoding="utf-8"), (app / "artifact.html").read_text(encoding="utf-8")
+    assert index.startswith("<!doctype html>") and not artifact.lstrip().startswith("<!doctype")
+    for page in (index, artifact):
+        assert "__APP_DATA__" not in page and "__SIM_JS__" not in page
+    data = json.loads(re.search(r"const DATA = (\{.*?\});\n", artifact, re.S).group(1))
+    assert data["meta"]["mock"] is True and set(data["counts"]) == {"naive", "instructed", "facts_first"}
+    assert len(data["candidates"]) == 21 and all(data["meta"]["slot"] in p for b in data["briefs"].values() for p in b["prompts"].values())
+
+
+def test_simulator_orders_by_calibration(tmp_path: Path):
+    """Runs app/sim.js under node (skipped if node is missing) on hand-made counts."""
+    import shutil
+    if not shutil.which("node"):
+        import pytest
+        pytest.skip("node not installed")
+    sim = Path(__file__).resolve().parents[1] / "app" / "sim.js"
+    script = tmp_path / "t.js"
+    script.write_text(f"""
+const Sim = require({json.dumps(str(sim))});
+// sparse labels say nothing about the person; full labels are accurate
+const cal = {{ full: {{ great: {{great: 9, good: 1}}, good: {{good: 9, okay: 1}}, okay: {{okay: 9, good: 1}}, poor: {{poor: 10}} }},
+              sparse: {{ great: {{okay: 10}}, good: {{okay: 10}}, okay: {{okay: 10}}, poor: {{okay: 10}} }} }};
+const p = {{ n: 600, great: 0.05, good: 0.15, okay: 0.4, sparse: 0.3, median: 19, sigma: 0.5, sparseMult: 1, agents: 4, placement: "after-good" }};
+const out = {{ label: [], calibrated: [], arrival: [], learned: [] }};
+for (let s = 1; s <= 40; s++) {{
+  const pool = Sim.makePool(p, cal, s), ctx = Sim.context({{ ...p, seed: s }}, cal);
+  for (const pol of Object.keys(out)) {{
+    const r = Sim.run(pool, pol, ctx);
+    if (r.order.length !== pool.length || new Set(r.order).size !== pool.length) throw new Error("not a permutation: " + pol);
+    out[pol].push(Sim.metrics(r, pool, 100).h90);
+  }}
+}}
+const m = Object.fromEntries(Object.entries(out).map(([k, v]) => [k, Sim.quantile(v, 0.5)]));
+const post = Sim.posterior(cal, Sim.priorOf(p), 0.5);
+console.log(JSON.stringify({{ m, sparseOkay: post.sparse.okay, fullGood: post.full.good }}));
+""", encoding="utf-8")
+    r = subprocess.run(["node", str(script)], capture_output=True, text=True)
+    assert r.returncode == 0, r.stderr
+    res = json.loads(r.stdout)
+    assert abs(res["sparseOkay"] - 0.05) < 0.01          # uninformative label -> posterior ~ prior
+    assert res["m"]["calibrated"] < res["m"]["label"] < res["m"]["arrival"]
+    assert res["m"]["learned"] < res["m"]["arrival"]

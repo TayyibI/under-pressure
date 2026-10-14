@@ -1,4 +1,57 @@
-# Same Person, Different Profile
+# Who's worth 19 minutes? · Same Person, Different Profile
+
+Two connected pieces of work on first-pass candidate screening:
+
+1. **Who's worth 19 minutes?** (`app/`, deployable `site/`): an interactive research-queue simulator. When research agents are the bottleneck, which candidate should an idle agent research next? Four policies race on the same simulated pool, using first-pass labels drawn from what a real LLM screener did in the benchmark below.
+2. **Same Person, Different Profile** (`twins/`): the benchmark that measured those labels. It asks whether an LLM first-pass screener judges the candidate or the way the profile is written.
+
+## Who's worth 19 minutes?
+
+In Metaview's fillmore case study, 720 engineers were researched over 24 days before candidate #721. His role descriptions were sparse, so the profile-only first pass scored him "good, not great". Then 19 minutes of research (58 actions) turned that into "great", and he was hired. Research is where agent-hours go. This simulator asks what order to research candidates in.
+
+**Open it:** `site/index.html` in any browser, or double-click `open_simulator.bat`. No server or install is needed. It's one static file with no dependencies besides Google Fonts.
+
+**Deploy it:** any static host works.
+- **GitHub Pages:** push the repo, then set Settings → Pages → Source to "GitHub Actions". `.github/workflows/pages.yml` publishes `site/`.
+- **Netlify:** drag `site/` onto app.netlify.com/drop.
+
+The claude.ai Artifact version (`artifact.html`) adds one feature, "run this first pass live". It sends a profile to Claude with the benchmark's exact screening prompt, on the viewer's own account.
+
+**What it simulates.**
+- **The pool.** Candidates have a true tier, a profile type (full or titles-and-dates only) and a first-pass label. Labels are drawn from the counts measured in the kill test: how often the screener gave each label to candidates of each true tier, per profile type.
+- **Research** takes a lognormal time around 19 minutes and reveals the true tier.
+- **The race.** K agents per lane work in parallel. Every lane gets the same pool with the same research times; only the order differs.
+- **The four policies:**
+  - **Arrival order:** candidates in the order they were sourced.
+  - **Label order:** great, then good, then okay, then poor. Where "needs research" sits is a setting.
+  - **Learns as it goes:** Thompson sampling over label × profile-type buckets. It starts with no table and learns only from research it has finished.
+  - **Calibrated:** ranks by P(great | label, profile type) per expected research-minute. It uses the measured table with +0.5 smoothing.
+
+**Result at the defaults.** These come from 300 simulated pools of 900 candidates, with 4% great, 30% sparse and 6 agents per lane. A "#721" means a great candidate whose first pass said less than great.
+
+| Agent-hours to find 90% of the #721s (median) | Arrival | Label order | Learns as it goes | Calibrated |
+|---|---|---|---|---|
+| Naive screener's labels | 286 | 286 | 178 | 145 |
+| Instructed screener's labels | 285 | 249 | 187 | 132 |
+| Facts-first screener's labels ("needs research" after good) | 286 | 131 | 130 | 94 |
+| Facts-first screener's labels ("needs research" after great) | 286 | 94 | 130 | 94 |
+
+- With the naive screener's labels, label order finds the #721s no faster than arrival order. It finds the obvious greats fast, then it reaches sparse profiles only when it gets to the "okay" band.
+- Calibrated order beat label order in 300 of 300 pools.
+- The gap narrows as sparse profiles get more common, or when sparse profiles take longer to research.
+- With facts-first and "needs research" placed right after "great", the gap is zero. A well-placed flag on a well-behaved screener already gives the calibrated order. The page shows all of this live.
+
+**Checks.**
+- `tests/test_pipeline.py` runs the simulator under node, if it's installed, on hand-made counts.
+- An independent Python re-implementation of the static policies matched the JavaScript medians within about 1%.
+
+**What it is not.** It is not fillmore's ranking, data or code. Labels come from a synthetic benchmark (21 candidates, 2 repeats, Sonnet 5.5 at low effort), so read the posterior bars as directions. The calibrated lane uses the same table the simulator draws labels from, so it is a best case. The learns-as-it-goes lane is the realistic version.
+
+**Rebuild after a new run.** `python -m twins app --quick` (or without `--quick` for the full run) writes `<run>/app/`. Copy `index.html` and `kill-test.html` into `site/` to redeploy.
+
+---
+
+## Same Person, Different Profile
 
 **Does an LLM first-pass screener judge the candidate, or the way the profile is written?**
 
@@ -35,6 +88,7 @@ What this repo adds: the same questions asked of a **profile-only sourcing scree
 1. Double-click **`setup.bat`**. It finds Python 3.10+ (including Anaconda), creates `.venv`, installs packages, runs the tests and a free practice run with a fake model, then opens the practice report. Everything it does is logged to `setup_log.txt`.
 2. Double-click **`run_kill_test.bat`**. It asks for your API key once (and offers to remember it), runs the kill test, then opens the report.
 3. Double-click **`run_full.bat`** for the full run.
+4. Double-click **`open_simulator.bat`** to rebuild and open the research-queue simulator from your latest run.
 
 Every run also writes `<run folder>/run_log.txt`.
 
@@ -47,7 +101,7 @@ cd profile-twins
 python3 -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 export ANTHROPIC_API_KEY=sk-ant-...                     # Windows PowerShell: $env:ANTHROPIC_API_KEY="sk-ant-..."
-python -m pytest -q                                     # 9 tests, no API calls
+python -m pytest -q                                     # 10 tests, no API calls
 ```
 
 ## Run
@@ -136,6 +190,10 @@ twins/run.py         runs screeners x models x variants x repeats (resumable)
 twins/analyze.py     metrics, paired tests, bootstrap CIs, twin-card selection
 twins/report.py      report.md + index.html
 twins/llm.py         Anthropic client (cache, retries, preflight, spend) + mock
+twins/calibrate.py   label counts -> simulator data; builds the simulator page
+app/sim.js           research-queue simulator (no dependencies; runs in the page and under node)
+app/app_template.html  the simulator page
+site/                built simulator + first test's results, ready for any static host
 tests/               pipeline tests (no API calls)
 docs/demo-script.md  2-minute video outline + outreach email draft
 ```

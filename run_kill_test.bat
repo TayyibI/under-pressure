@@ -29,6 +29,7 @@ echo Saved to your Windows user environment variables.
 if errorlevel 1 goto :failed
 if not exist "%ROOT%\run_quick\results\index.html" goto :failed
 start "" "%ROOT%\run_quick\results\index.html"
+if exist "%ROOT%\run_quick\app\index.html" start "" "%ROOT%\run_quick\app\index.html"
 echo.
 echo Done. The report has opened in your browser.
 echo Files: run_quick\results\index.html and run_quick\results\report.md

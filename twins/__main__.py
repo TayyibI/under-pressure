@@ -5,6 +5,7 @@ Stages (each resumable; LLM calls are cached in <workdir>/llm_cache.jsonl):
   rewrite   LLM rewrites (polished, verbose) with fact-preservation check
   screen    run screeners x models x variants x repeats
   report    compute metrics, write results/report.md + results/index.html
+  app       build the research-queue simulator from this run's labels: app/index.html (no API calls)
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-from . import analyze, generate, report, rewrite, run
+from . import analyze, calibrate, generate, report, rewrite, run
 from .llm import PRICES, cache_spend, make_llm
 from .screeners import SCREENERS
 
@@ -29,7 +30,8 @@ EST_IN, EST_OUT = 950, 250
 
 def parse(argv):
     ap = argparse.ArgumentParser(prog="twins", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("stage", choices=["generate", "rewrite", "screen", "report", "all"])
+    ap.add_argument("stage", choices=["generate", "rewrite", "screen", "report", "app", "all"])
+    ap.add_argument("--author", default="Tayyib (github.com/TayyibI)", help="byline on the simulator page")
     ap.add_argument("--quick", action="store_true", help="kill test: 21 candidates, Sonnet only, 2 repeats")
     ap.add_argument("--mock", action="store_true", help="fake model, no API calls (pipeline test only)")
     ap.add_argument("--workdir", default=None, help="default: run/ (or run_quick/, run_mock/)")
@@ -93,7 +95,7 @@ def main(argv=None) -> None:
     sys.stdout, sys.stderr = _Tee(sys.stdout, log), _Tee(sys.stderr, log)
     print(f"\n=== {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} · twins {' '.join(argv if argv is not None else sys.argv[1:])}")
     cfg_path = a.workdir / "config.json"
-    stages = ["generate", "rewrite", "screen", "report"] if a.stage == "all" else [a.stage]
+    stages = ["generate", "rewrite", "screen", "report", "app"] if a.stage == "all" else [a.stage]
 
     if "generate" in stages:
         if (data_dir / "truth.json").exists():
@@ -171,6 +173,10 @@ def main(argv=None) -> None:
         print(f"[report] {res_dir}/index.html and {res_dir}/report.md")
         for line in report.headline_lines(summary):
             print("  " + line)
+
+    if "app" in stages:
+        out = calibrate.build_app(a.workdir, a.workdir / "app", author=a.author)
+        print(f"[app] {out[0]}  (open it in a browser, or upload the folder to any static host)")
 
 
 if __name__ == "__main__":

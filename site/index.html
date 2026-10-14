@@ -1,0 +1,1667 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Who's worth 19 minutes?</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --ground: #e9edf1; --paper: #ffffff; --ink: #14213d; --graphite: #566173;
+  --rule: #cdd4dc; --rule-soft: #e3e8ee; --marker: #ffe45c; --marker-ink: #14213d;
+  --arrival: #566173; --label: #c2364a; --learned: #6b5fc7; --calib: #008a6e;
+  --sans: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #12161c; --paper: #1b2129; --ink: #e6eaf0; --graphite: #9aa4b2;
+    --rule: #333c48; --rule-soft: #262e38; --marker: #ffe45c; --marker-ink: #14213d;
+    --arrival: #9aa4b2; --label: #e0566a; --learned: #8a7fe0; --calib: #1fa384;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #12161c; --paper: #1b2129; --ink: #e6eaf0; --graphite: #9aa4b2;
+  --rule: #333c48; --rule-soft: #262e38; --marker: #ffe45c; --marker-ink: #14213d;
+  --arrival: #9aa4b2; --label: #e0566a; --learned: #8a7fe0; --calib: #1fa384;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font-family: var(--sans); font-size: 17px; line-height: 1.55; }
+.page { max-width: 1260px; margin: 0 auto; padding-block: 52px 72px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+@media (max-width: 640px) { .page { padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } body { font-size: 16px; } }
+a { color: inherit; text-underline-offset: 3px; }
+:focus-visible { outline: 3px solid var(--learned); outline-offset: 2px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.num { font-variant-numeric: tabular-nums; }
+.mock { background: var(--label); color: #fff; font-weight: 600; padding: 12px 16px; border-radius: 4px; margin: 0 0 28px; max-width: 70ch; }
+
+/* masthead */
+.kicker { margin: 0 0 14px; font-size: 0.86rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--graphite); }
+h1 { font-size: clamp(2.6rem, 6.4vw, 5rem); line-height: 0.93; font-weight: 830; font-stretch: 125%; letter-spacing: -0.02em; margin: 0 0 22px; max-width: 13ch; text-wrap: balance; }
+h1 mark { background: linear-gradient(176deg, transparent 10%, var(--marker) 11%, var(--marker) 86%, transparent 88%); color: var(--marker-ink); padding: 0 0.06em; }
+.mast-grid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 44px; align-items: end; }
+@media (max-width: 980px) { .mast-grid { grid-template-columns: minmax(0, 1fr); gap: 28px; } }
+.lede { font-family: var(--serif); font-size: 1.16rem; line-height: 1.6; margin: 0 0 14px; max-width: 60ch; }
+.lede-2 { color: var(--graphite); margin: 0; max-width: 60ch; font-size: 1rem; }
+
+.answer { background: var(--paper); border: 1px solid var(--rule); border-top: 4px solid var(--ink); border-radius: 3px; padding: 18px 20px 16px; }
+.answer h2 { font-size: 1.02rem; font-weight: 700; margin: 0 0 2px; font-stretch: 105%; }
+.answer .sub2 { font-size: 0.84rem; color: var(--graphite); margin: 0 0 14px; }
+.ans-rows { display: grid; gap: 10px; }
+.ans-row { display: grid; grid-template-columns: 9.5em minmax(0, 1fr) 4.2em; align-items: center; gap: 12px; font-size: 0.92rem; }
+.ans-row .nm { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; white-space: nowrap; }
+.ans-row .nm i { width: 14px; height: 0; border-top: 4px solid var(--c); flex: none; }
+.ans-track { position: relative; height: 22px; background: var(--rule-soft); border-radius: 2px; overflow: hidden; }
+.ans-fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--c); transition: width 0.9s cubic-bezier(.2,.8,.2,1); }
+.ans-row .v { text-align: right; font-weight: 750; font-stretch: 88%; font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.ans-delta { margin: 16px 0 0; padding-top: 12px; border-top: 1px dashed var(--rule); display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap; }
+.ans-delta strong { font-size: 2.3rem; line-height: 1; font-weight: 820; font-stretch: 92%; font-variant-numeric: tabular-nums; }
+.ans-delta span { font-size: 0.92rem; color: var(--graphite); max-width: 34ch; }
+.ans-progress { margin: 12px 0 0; height: 3px; background: var(--rule-soft); border-radius: 2px; overflow: hidden; }
+.ans-progress div { height: 100%; width: 0; background: var(--ink); }
+.ans-foot { margin: 8px 0 0; font-size: 0.8rem; color: var(--graphite); font-variant-numeric: tabular-nums; }
+
+/* race */
+.race { margin: 52px 0 0; background: var(--paper); border: 1px solid var(--rule); border-radius: 4px; padding: 18px 20px 22px; }
+@media (max-width: 640px) { .race { margin-left: -6px; margin-right: -6px; padding: 14px 12px 18px; } }
+.bar { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: center; }
+.bar .grow { flex: 1 1 auto; }
+.ctl-label { font-size: 0.82rem; color: var(--graphite); margin-right: 8px; white-space: nowrap; }
+.seg { display: inline-flex; border: 1.5px solid var(--ink); border-radius: 6px; overflow: hidden; vertical-align: middle; }
+.seg button { font-size: 0.86rem; font-weight: 620; padding: 6px 11px; border: 0; background: transparent; cursor: pointer; white-space: nowrap; }
+.seg button + button { border-left: 1.5px solid var(--ink); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.btn { font-size: 0.88rem; font-weight: 650; padding: 6px 14px; border: 1.5px solid var(--ink); border-radius: 6px; background: transparent; cursor: pointer; white-space: nowrap; }
+.btn.primary { background: var(--ink); color: var(--paper); min-width: 6.2em; }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.slider { display: inline-flex; align-items: center; gap: 8px; font-size: 0.86rem; }
+.slider input { width: 120px; accent-color: var(--ink); }
+.slider output { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 2ch; }
+.timeline { display: flex; align-items: center; gap: 14px; margin: 14px 0 0; }
+.timeline input { flex: 1 1 auto; accent-color: var(--ink); min-width: 0; }
+.clock { font-size: 0.86rem; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--graphite); }
+.clock b { color: var(--ink); }
+@media (max-width: 640px) { .timeline { flex-wrap: wrap; } .clock { width: 100%; } }
+
+.lanes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px; margin: 18px 0 0; }
+@media (max-width: 980px) { .lanes { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; } }
+.lane { min-width: 0; }
+.lane h3 { margin: 0; font-size: 1rem; font-weight: 760; font-stretch: 108%; display: flex; align-items: center; gap: 8px; }
+.lane h3 i { width: 18px; height: 0; border-top: 4px solid var(--c); flex: none; }
+.lane .rule { margin: 3px 0 8px; font-size: 0.8rem; line-height: 1.35; color: var(--graphite); min-height: 2.7em; }
+.lane .place { display: block; margin: -4px 0 8px; font-size: 0.78rem; color: var(--graphite); min-height: 1.75em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lane .place.off { visibility: hidden; }
+.lanes:not(.has-place) .lane .place { display: none; }
+.lane .place select { font-size: 0.78rem; padding: 1px 4px; border: 1px solid var(--rule); border-radius: 4px; background: var(--paper); }
+@media (max-width: 640px) { .lane .rule { font-size: 0.74rem; min-height: 4em; } .lane h3 { font-size: 0.9rem; white-space: nowrap; } .lane h3 span { overflow: hidden; text-overflow: ellipsis; } }
+.count dt .sh { display: none; }
+@media (max-width: 640px) { .count dt .lg { display: none; } .count dt .sh { display: inline; } }
+.stage { position: relative; }
+.stage canvas { display: block; width: 100%; cursor: crosshair; touch-action: manipulation; }
+.stamp { position: absolute; left: 6px; right: 6px; bottom: 6px; background: var(--ink); color: var(--paper); font-size: 0.76rem; font-weight: 650; padding: 5px 8px; border-radius: 3px; pointer-events: none;
+  opacity: 0; transform: translateY(6px); transition: opacity .3s, transform .3s; }
+.stamp.on { opacity: 0.94; transform: none; }
+.tip { position: absolute; z-index: 5; width: max-content; max-width: 240px; background: var(--ink); color: var(--paper); font-size: 0.78rem; line-height: 1.4; padding: 8px 10px; border-radius: 4px; pointer-events: none; }
+.tip b { font-weight: 700; }
+.tip[hidden] { display: none; }
+.count { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin: 10px 0 0; padding-top: 7px; border-top: 3px solid var(--c); }
+.count div { min-width: 0; }
+.count dt { font-size: 0.72rem; color: var(--graphite); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.count dd { margin: 0; font-weight: 760; font-stretch: 86%; font-size: 1.4rem; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.count dd small { font-size: 0.74rem; font-weight: 500; color: var(--graphite); }
+@media (max-width: 640px) { .count dd { font-size: 1.08rem; } .count dt { font-size: 0.66rem; } }
+
+.keyrow { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; margin: 18px 0 0; font-size: 0.8rem; color: var(--graphite); }
+.keyrow span { display: inline-flex; align-items: center; gap: 7px; }
+.keyrow svg { flex: none; }
+.filters { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 12px 0 0; }
+.chip { font-size: 0.8rem; font-weight: 600; padding: 3px 10px; border: 1.5px solid var(--rule); border-radius: 999px; background: transparent; cursor: pointer; white-space: nowrap; }
+.chip[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--paper); }
+.chip.spoil[aria-pressed="true"] { background: var(--marker); color: var(--marker-ink); border-color: var(--marker-ink); }
+.pinbox { margin: 12px 0 0; padding: 10px 12px; border: 1.5px solid var(--ink); border-radius: 4px; font-size: 0.88rem; display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; }
+.pinbox[hidden] { display: none; }
+.pinbox .pp { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.pinbox .pp i { width: 12px; height: 0; border-top: 4px solid var(--c); }
+.pinbox button { margin-left: auto; }
+
+.below { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); gap: 26px; margin: 24px 0 0; padding-top: 18px; border-top: 1px solid var(--rule); }
+@media (max-width: 980px) { .below { grid-template-columns: minmax(0, 1fr); } }
+.chart-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; align-items: center; margin: 0 0 6px; }
+.chart-head h3, .ticker h3 { font-size: 0.98rem; font-weight: 720; margin: 0; }
+.chart svg { display: block; width: 100%; overflow: visible; }
+.chart text { font-family: var(--sans); font-size: 11px; fill: var(--graphite); font-variant-numeric: tabular-nums; }
+.chart .lbl { font-size: 11.5px; font-weight: 700; }
+.budget { display: flex; align-items: center; gap: 10px; font-size: 0.84rem; margin: 6px 0 0; }
+.budget input { flex: 1 1 auto; accent-color: var(--ink); min-width: 0; }
+.budget output { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 640px) { .budget { flex-wrap: wrap; } .budget output { white-space: normal; flex-basis: 100%; font-size: 0.8rem; } .seg button { padding: 6px 8px; font-size: 0.8rem; } }
+.ticker ol { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.ticker li { display: grid; grid-template-columns: 4px minmax(0, 1fr); gap: 0 10px; font-size: 0.8rem; line-height: 1.35; padding: 6px 0; border-bottom: 1px solid var(--rule-soft); animation: drop .45s cubic-bezier(.2,.8,.2,1); }
+.ticker li::before { content: ""; background: var(--c); border-radius: 2px; grid-row: span 2; }
+.ticker li b { font-weight: 700; }
+.ticker li span { color: var(--graphite); }
+.ticker .empty { color: var(--graphite); font-size: 0.84rem; border: 0; animation: none; display: block; }
+.ticker .empty::before { display: none; }
+@keyframes drop { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+
+.world { margin: 22px 0 0; padding-top: 16px; border-top: 1px solid var(--rule); }
+.world h3 { font-size: 0.98rem; font-weight: 720; margin: 0 0 4px; }
+.world > p { margin: 0 0 12px; font-size: 0.84rem; color: var(--graphite); max-width: 80ch; }
+.knobs { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px 26px; }
+.knob label { display: flex; justify-content: space-between; gap: 8px; font-size: 0.84rem; font-weight: 600; }
+.knob label output { font-variant-numeric: tabular-nums; }
+.knob input { width: 100%; accent-color: var(--ink); margin: 4px 0 2px; }
+.knob .src { font-size: 0.74rem; color: var(--graphite); line-height: 1.35; }
+.tag { display: inline-block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; padding: 0 5px; border-radius: 3px; border: 1px solid currentColor; margin-right: 4px; vertical-align: 1px; }
+.tag.m { color: var(--calib); } .tag.c { color: var(--learned); } .tag.a { color: var(--graphite); }
+
+/* sections */
+.sec { margin: 84px 0 0; padding-top: 24px; border-top: 2px solid var(--ink); }
+.sec-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 7fr); gap: 40px; align-items: start; }
+@media (max-width: 980px) { .sec-grid { grid-template-columns: minmax(0, 1fr); gap: 20px; } .sec { margin-top: 60px; } }
+h2 { font-size: clamp(1.5rem, 2.8vw, 2.1rem); line-height: 1.12; font-weight: 770; font-stretch: 112%; letter-spacing: -0.006em; margin: 0 0 12px; text-wrap: balance; }
+.sec p { margin: 0 0 12px; max-width: 60ch; }
+.sec .note { font-size: 0.86rem; color: var(--graphite); }
+.panel { background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 16px 18px; min-width: 0; }
+
+.post { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.post th { text-align: left; font-size: 0.78rem; font-weight: 650; color: var(--graphite); padding: 0 8px 8px 0; }
+.post td { padding: 8px 8px 8px 0; border-top: 1px solid var(--rule-soft); vertical-align: middle; }
+.post td:first-child { width: 7.5em; font-weight: 650; }
+.pbar { display: grid; grid-template-columns: minmax(0, 1fr) 7.4em; gap: 10px; align-items: center; }
+.pbar .tr { position: relative; height: 14px; background: var(--rule-soft); border-radius: 2px; overflow: hidden; }
+.pbar .fl { position: absolute; inset: 0 auto 0 0; background: var(--calib); transition: width .5s; }
+.pbar .fl.over::after { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 6px; background: repeating-linear-gradient(135deg, var(--paper) 0 2px, transparent 2px 4px); }
+.pbar .tx { font-variant-numeric: tabular-nums; font-size: 0.84rem; line-height: 1.25; white-space: nowrap; }
+.pbar .tx small { display: block; font-size: 0.74rem; }
+.pbar .tx b { font-weight: 750; }
+.pbar .tx small { color: var(--graphite); }
+.pbar.na .tx { color: var(--graphite); }
+.counts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 18px 0 0; }
+@media (max-width: 640px) { .counts { grid-template-columns: minmax(0, 1fr); } }
+.counts h4 { margin: 0 0 6px; font-size: 0.82rem; font-weight: 700; }
+.ct { width: 100%; border-collapse: collapse; font-size: 0.78rem; font-variant-numeric: tabular-nums; }
+.ct th, .ct td { padding: 3px 4px; text-align: right; border-bottom: 1px solid var(--rule-soft); }
+.ct th:first-child, .ct td:first-child { text-align: left; color: var(--graphite); }
+.ct thead th { color: var(--graphite); font-weight: 600; }
+.ct td.z { color: var(--rule); }
+.ct td.hi { font-weight: 750; }
+
+.strip svg { display: block; width: 100%; overflow: visible; }
+.strip text { font-family: var(--sans); font-size: 11px; fill: var(--graphite); font-variant-numeric: tabular-nums; }
+.strip .rowname { font-size: 12px; font-weight: 700; fill: var(--ink); }
+.strip-head { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; margin: 0 0 10px; }
+.mc-sum { font-size: 0.95rem; margin: 12px 0 0; max-width: 70ch; }
+.mc-sum b { font-weight: 720; }
+
+.map { width: 100%; border-collapse: separate; border-spacing: 3px; font-size: 0.86rem; font-variant-numeric: tabular-nums; }
+.map th { font-size: 0.78rem; font-weight: 650; color: var(--graphite); padding: 4px; text-align: center; }
+.map th[scope="row"] { text-align: left; color: var(--ink); white-space: nowrap; padding-right: 10px; }
+.map td { text-align: center; padding: 12px 4px; border-radius: 3px; background: var(--rule-soft); font-weight: 700; transition: background .4s; }
+.map td.pending { color: var(--graphite); font-weight: 500; }
+.map td.cur { outline: 2px solid var(--ink); outline-offset: -2px; }
+
+.try { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: 22px; }
+@media (max-width: 980px) { .try { grid-template-columns: minmax(0, 1fr); } }
+.try select { width: 100%; padding: 7px 8px; border: 1.5px solid var(--ink); border-radius: 6px; background: var(--paper); font-size: 0.9rem; }
+.cvwrap { margin: 12px 0 0; }
+.cv { margin: 0; padding: 14px 16px; font-family: var(--serif); font-size: 0.86rem; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; max-height: 24em; overflow: auto; width: 100%; }
+textarea.cv { min-height: 16em; resize: vertical; }
+.labels { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin: 0 0 4px; font-size: 0.86rem; }
+.lab { display: inline-block; font-weight: 700; padding: 1px 8px; border-radius: 3px; border: 1.5px solid var(--ink); font-size: 0.82rem; }
+.lab.research { border-style: dashed; color: var(--graphite); border-color: var(--graphite); }
+.lab.great { background: var(--marker); color: var(--marker-ink); border-color: var(--marker-ink); }
+.big { font-size: 2rem; font-weight: 800; font-stretch: 92%; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.qstrip { margin: 12px 0 0; }
+.qstrip .qn { display: flex; justify-content: space-between; font-size: 0.8rem; margin: 0 0 3px; }
+.qstrip .qn b { font-weight: 700; }
+.qbar { position: relative; height: 16px; background: var(--rule-soft); border-radius: 2px; }
+.qbar .rg { position: absolute; top: 0; bottom: 0; background: var(--c); opacity: .35; border-radius: 2px; }
+.qbar .pt { position: absolute; top: -3px; bottom: -3px; width: 3px; background: var(--c); border-radius: 1px; }
+.live { margin: 16px 0 0; padding: 14px 16px; border: 1.5px dashed var(--ink); border-radius: 4px; }
+.live[hidden] { display: none; }
+.live h4 { margin: 0 0 4px; font-size: 0.92rem; }
+.live p { font-size: 0.82rem; color: var(--graphite); margin: 0 0 10px; }
+.live .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.live .out { margin: 10px 0 0; font-size: 0.86rem; }
+.live .out .ev { margin: 6px 0 0; padding: 0; list-style: none; font-size: 0.8rem; }
+.live .out .ev li { padding: 2px 0; }
+
+.src-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+.src-table th { text-align: left; font-size: 0.78rem; color: var(--graphite); font-weight: 650; padding: 0 10px 8px 0; }
+.src-table td { padding: 10px 10px 10px 0; border-top: 1px solid var(--rule); vertical-align: top; }
+.src-table td:first-child { font-weight: 650; width: 11em; }
+.src-table td:nth-child(2) { width: 8em; font-variant-numeric: tabular-nums; }
+@media (max-width: 640px) { .src-table, .src-table tbody, .src-table tr, .src-table td { display: block; width: auto !important; } .src-table thead { display: none; } .src-table td { border: 0; padding: 2px 0; } .src-table tr { border-top: 1px solid var(--rule); padding: 10px 0; } }
+.foot { margin: 72px 0 0; padding-top: 16px; border-top: 1px solid var(--rule); font-size: 0.84rem; color: var(--graphite); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body>
+
+
+<div class="page">
+  <div class="mock" id="mockBanner" hidden>Practice data from a fake model. These numbers mean nothing.</div>
+
+  <header class="mast">
+    <p class="kicker">Research order · a simulation on measured screener behaviour</p>
+    <div class="mast-grid">
+      <div>
+        <h1>Who’s worth <mark>19 minutes</mark>?</h1>
+        <p class="lede">In Metaview’s fillmore case study, 720 engineers were researched over 24 days before candidate&nbsp;#721. His role descriptions were sparse, so the profile-only first pass scored him “good, not great”. Nineteen minutes of research (58 actions) turned that into “great”, and he was hired.</p>
+        <p class="lede-2">Research is where agent-hours go. So when an agent frees up, who should it research next? Below, four policies work through the same simulated pool, with the same research times. Only the order changes. First-pass labels follow what a real LLM screener did on my benchmark. Nothing here comes from fillmore.</p>
+      </div>
+      <aside class="answer" aria-live="polite">
+        <h2>Agent-hours to find 90% of the #721s</h2>
+        <p class="sub2" style="margin:0 0 4px"><b style="color:var(--ink)">#721</b>: a great candidate whose first pass said less than great.</p>
+        <p class="sub2" id="ansSub">Median over simulated pools · computing…</p>
+        <div class="ans-rows" id="ansRows"></div>
+        <div class="ans-delta"><strong id="ansDelta">…</strong><span id="ansDeltaTxt">fewer agent-hours than label order, ranking by measured calibration</span></div>
+        <div class="ans-progress"><div id="ansProg"></div></div>
+        <p class="ans-foot" id="ansFoot">&nbsp;</p>
+      </aside>
+    </div>
+  </header>
+
+  <section class="race" aria-label="Simulation">
+    <div class="bar">
+      <div><span class="ctl-label">First-pass screener <span class="tag m">measured</span></span><span class="seg" id="segScreener" role="group" aria-label="Screener calibration"></span> <span class="ctl-label" id="scrDesc" style="margin:0 0 0 6px"></span></div>
+      <label class="slider"><span class="ctl-label" style="margin:0">Agents per lane</span><input type="range" id="agents" min="1" max="30" step="1"><output id="agentsOut"></output></label>
+      <span class="grow"></span>
+      <button class="btn primary" id="play" type="button">Play</button>
+      <span class="seg" id="segSpeed" role="group" aria-label="Playback speed"></span>
+      <button class="btn" id="newPool" type="button">New pool</button>
+    </div>
+    <div class="timeline">
+      <input type="range" id="scrub" min="0" max="1000" step="1" value="0" aria-label="Simulation time">
+      <span class="clock" id="clock"></span>
+    </div>
+    <div class="lanes" id="lanes"></div>
+    <div class="keyrow" id="key"></div>
+    <div class="filters" id="filters" role="group" aria-label="Highlight"></div>
+    <div class="pinbox" id="pinbox" hidden></div>
+
+    <div class="below">
+      <figure class="chart" style="margin:0">
+        <div class="chart-head">
+          <h3 id="chartTitle">#721s found, by agent-hours spent</h3>
+          <span class="seg" id="segChart" role="group" aria-label="Chart shows"></span>
+        </div>
+        <svg id="chart" role="img" aria-label="Greats found against agent-hours, one line per policy"></svg>
+        <div class="budget"><span>Budget</span><input type="range" id="budget" min="10" max="320" step="5" aria-label="Agent-hour budget"><output id="budgetOut"></output></div>
+      </figure>
+      <aside class="ticker" aria-live="off">
+        <h3>#721s found</h3>
+        <ol id="ticker"><li class="empty">Press Play. Each find shows up here.</li></ol>
+      </aside>
+    </div>
+
+    <div class="world">
+      <h3>The world it runs in</h3>
+      <p>Change anything and the pool is redrawn, all four queues are rerun and the numbers at the top are recomputed. <span class="tag m">measured</span> from the benchmark run · <span class="tag c">case study</span> from Metaview’s published case study · <span class="tag a">assumption</span> mine, so push on it.</p>
+      <div class="knobs" id="knobs"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-grid">
+      <div>
+        <h2>Why the orders differ</h2>
+        <p>On a full profile, the first-pass label says a lot about the person. On a sparse one it says little. Label order treats both the same. Calibrated ranks each candidate by how often research turns up a great among candidates with that label and profile type.</p>
+        <p id="whyMeasured"></p>
+        <p class="note" id="whyNote"></p>
+      </div>
+      <div class="panel">
+        <table class="post" id="postTable"></table>
+        <div class="counts" id="countTables"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="strip-head">
+      <div>
+        <h2 style="margin:0">Is that luck? <span id="mcN">300</span> pools</h2>
+        <p class="note" style="margin:6px 0 0">Each dot is one simulated pool, with new candidates, labels and research times under the settings above.</p>
+      </div>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center">
+        <span class="seg" id="segMetric" role="group" aria-label="Metric"></span>
+        <button class="btn" id="mcAgain" type="button">New seeds</button>
+      </div>
+    </div>
+    <div class="panel strip"><svg id="strip" role="img" aria-label="Distribution of results across simulated pools"></svg></div>
+    <p class="mc-sum" id="mcSum"></p>
+  </section>
+
+  <section class="sec">
+    <div class="sec-grid">
+      <div>
+        <h2>Where the gap shrinks</h2>
+        <p>Each cell shows how many fewer agent-hours calibrated order needs than label order to find 90% of the #721s. It’s the median of 60 pools. Every other setting is whatever you set above.</p>
+        <p id="mapNote1"></p>
+        <p class="note">If a screener only flags sparse profiles for research, as facts-first does, then queueing the flagged ones straight after “great” gives label order the calibrated order for free. To check, pick Facts-first and set “needs research” to “after great”. The point of calibrating is that you don’t have to guess which case you’re in. You measure it.</p>
+      </div>
+      <div class="panel">
+        <div class="strip-head" style="margin-bottom:6px"><span class="seg" id="segMap" role="group" aria-label="Map varies"></span><span class="note" id="mapStatus"></span></div>
+        <table class="map" id="map"></table>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>Put one candidate in the queue</h2>
+    <p>These are the benchmark candidates, all synthetic, with the labels the screener gave them in the run. Pick one and switch between the full profile and titles-and-dates only. You’ll see where label order and calibrated order would put that candidate in the current pool.</p>
+    <div class="try">
+      <div>
+        <select id="trySel" aria-label="Benchmark candidate"></select>
+        <div style="margin:10px 0 0"><span class="seg" id="segVariant" role="group" aria-label="Profile version"></span></div>
+        <div class="cvwrap" id="cvWrap"></div>
+      </div>
+      <div class="panel" id="tryOut"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <h2>What this rests on</h2>
+    <table class="src-table">
+      <thead><tr><th>Input</th><th>Default</th><th>Where it comes from</th></tr></thead>
+      <tbody id="srcRows"></tbody>
+    </table>
+    <p class="note" style="margin-top:16px; max-width:80ch">This is not fillmore’s ranking, data or code. I haven’t seen any of them. Candidates, roles and labels come from a synthetic benchmark. The simulator is <code>app/sim.js</code> in the repo, about 300 lines with no dependencies.</p>
+  </section>
+
+  <section class="sec" id="chapterOne">
+    <div class="sec-grid">
+      <div><h2>How this started</h2></div>
+      <div>
+        <p>The first test asked whether AI-polished profiles fool an LLM screener. They didn’t. Plain and polished versions of the same person changed label 2% of the time, the same rate as re-rating identical text. Missing detail did move labels. The naive screener called 90% of sparse profiles “okay”, whoever the person was. That measurement is the calibration this page runs on.</p>
+        <p id="chapterLink"></p>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot"><span id="byline"></span><span>Synthetic candidates and roles. Not affiliated with Metaview.</span></footer>
+</div>
+
+<script>
+/* Research-queue simulator. Plain JS, no dependencies; runs in the page and under node for tests.
+ *
+ * A pool of candidates has a true tier (poor/okay/good/great), a profile type (full or sparse) and a
+ * first-pass label drawn from MEASURED counts: how often the benchmark screener gave each label to
+ * candidates of each true tier, by profile type. Research takes time and reveals the true tier.
+ * K agents work in parallel. Policies differ only in which candidate an idle agent researches next.
+ * Every policy sees the same pool with the same research durations (common random numbers).
+ */
+(function (root) {
+  "use strict";
+
+  const TIERS = ["poor", "okay", "good", "great"];
+  const LABELS = ["great", "good", "research", "okay", "poor"];
+  const POLICIES = ["arrival", "label", "learned", "calibrated"];
+
+  // ---------- random numbers (seeded, so every pool is reproducible) ----------
+  function rng32(seed) {
+    let a = (seed >>> 0) || 1;
+    return function () {
+      a = (a + 0x6d2b79f5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function normal(r) {
+    let u = 0, v = 0;
+    while (u === 0) u = r();
+    while (v === 0) v = r();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function gamma(r, k) {                       // Marsaglia-Tsang, k > 0
+    if (k < 1) return gamma(r, k + 1) * Math.pow(r(), 1 / k);
+    const d = k - 1 / 3, c = 1 / Math.sqrt(9 * d);
+    for (;;) {
+      let x, v;
+      do { x = normal(r); v = 1 + c * x; } while (v <= 0);
+      v = v * v * v;
+      const u = r();
+      if (u < 1 - 0.0331 * x * x * x * x) return d * v;
+      if (Math.log(u) < 0.5 * x * x + d * (1 - v + Math.log(v))) return d * v;
+    }
+  }
+  function beta(r, a, b) { const x = gamma(r, a); return x / (x + gamma(r, b)); }
+  function pick(r, weights) {                  // weights: [[key, w], ...]
+    let tot = 0;
+    for (const [, w] of weights) tot += w;
+    let u = r() * tot;
+    for (const [k, w] of weights) { if ((u -= w) < 0) return k; }
+    return weights[weights.length - 1][0];
+  }
+
+  // ---------- calibration ----------
+  function labelsOf(cal) {                     // labels this screener ever produced
+    const seen = new Set();
+    for (const kind of Object.keys(cal)) for (const t of Object.keys(cal[kind])) for (const l of Object.keys(cal[kind][t])) seen.add(l);
+    return LABELS.filter((l) => seen.has(l));
+  }
+
+  /** P(label | tier, kind), Laplace-smoothed over the labels this screener uses. */
+  function likelihood(cal, alpha) {
+    const labels = labelsOf(cal), out = {};
+    for (const kind of ["full", "sparse"]) {
+      out[kind] = {};
+      for (const t of TIERS) {
+        const c = (cal[kind] && cal[kind][t]) || {};
+        let n = 0;
+        for (const l of labels) n += c[l] || 0;
+        out[kind][t] = {};
+        for (const l of labels) out[kind][t][l] = ((c[l] || 0) + alpha) / (n + alpha * labels.length);
+      }
+    }
+    return out;
+  }
+
+  /** P(great | label, kind) from the smoothed likelihoods and a tier prior. */
+  function posterior(cal, prior, alpha) {
+    const L = likelihood(cal, alpha), labels = labelsOf(cal), out = {};
+    for (const kind of ["full", "sparse"]) {
+      out[kind] = {};
+      for (const l of labels) {
+        let num = 0, den = 0;
+        for (const t of TIERS) {
+          const p = L[kind][t][l] * prior[t];
+          den += p;
+          if (t === "great") num = p;
+        }
+        out[kind][l] = den > 0 ? num / den : 0;
+      }
+    }
+    return out;
+  }
+
+  function priorOf(p) {
+    const great = p.great, good = p.good, okay = p.okay;
+    return { great, good, okay, poor: Math.max(0, 1 - great - good - okay) };
+  }
+
+  // ---------- pools ----------
+  /**
+   * params: {n, great, good, okay, sparse, median (min), sigma, sparseMult}
+   * cal: counts for one screener: cal[kind][tier][label] = count
+   */
+  function makePool(params, cal, seed) {
+    const r = rng32(seed), prior = priorOf(params);
+    const tierW = TIERS.map((t) => [t, prior[t]]);
+    const labW = {};
+    for (const kind of ["full", "sparse"]) {
+      labW[kind] = {};
+      for (const t of TIERS) {
+        const c = (cal[kind] && cal[kind][t]) || {};
+        const w = Object.entries(c).filter(([, v]) => v > 0);
+        labW[kind][t] = w.length ? w : [["okay", 1]];
+      }
+    }
+    const out = new Array(params.n);
+    for (let i = 0; i < params.n; i++) {
+      const tier = pick(r, tierW);
+      const sparse = r() < params.sparse;
+      const kind = sparse ? "sparse" : "full";
+      const label = pick(r, labW[kind][tier]);
+      const dur = params.median * Math.exp(params.sigma * normal(r)) * (sparse ? params.sparseMult : 1);
+      out[i] = { i, tier, sparse, kind, label, dur, great: tier === "great" };
+    }
+    return out;
+  }
+
+  // ---------- policies ----------
+  const PLACEMENT = { "after-great": 0.5, "after-good": 1.5, "with-okay": 2, "last": 4 };
+  function labelRank(label, placement) {
+    if (label === "research") return PLACEMENT[placement] ?? 1.5;
+    return { great: 0, good: 1, okay: 2, poor: 3 }[label];
+  }
+
+  /** Static queue order (indices) for arrival / label / calibrated. */
+  function staticOrder(pool, policy, ctx) {
+    const idx = pool.map((c) => c.i);
+    if (policy === "arrival") return idx;
+    if (policy === "label") {
+      return idx.sort((a, b) => (labelRank(pool[a].label, ctx.placement) - labelRank(pool[b].label, ctx.placement)) || a - b);
+    }
+    if (policy === "calibrated") {
+      const key = (c) => -calibratedValue(c.label, c.kind, ctx);
+      return idx.sort((a, b) => (key(pool[a]) - key(pool[b])) || a - b);
+    }
+    throw new Error("not static: " + policy);
+  }
+
+  function expectedDur(kind, ctx) {
+    return ctx.median * Math.exp((ctx.sigma * ctx.sigma) / 2) * (kind === "sparse" ? ctx.sparseMult : 1);
+  }
+  /** Chance of a great per research-minute, the calibrated policy's sort key. */
+  function calibratedValue(label, kind, ctx) {
+    return (ctx.post[kind][label] || 0) / expectedDur(kind, ctx);
+  }
+
+  // ---------- min-heap ----------
+  function Heap() { this.a = []; }
+  Heap.prototype.push = function (t, v) {
+    const a = this.a; a.push([t, v]);
+    let i = a.length - 1;
+    while (i > 0) { const p = (i - 1) >> 1; if (a[p][0] <= a[i][0]) break; [a[p], a[i]] = [a[i], a[p]]; i = p; }
+  };
+  Heap.prototype.pop = function () {
+    const a = this.a, top = a[0], last = a.pop();
+    if (a.length) {
+      a[0] = last;
+      let i = 0;
+      for (;;) {
+        const l = 2 * i + 1, r = l + 1;
+        let m = i;
+        if (l < a.length && a[l][0] < a[m][0]) m = l;
+        if (r < a.length && a[r][0] < a[m][0]) m = r;
+        if (m === i) break;
+        [a[m], a[i]] = [a[i], a[m]]; i = m;
+      }
+    }
+    return top;
+  };
+  Heap.prototype.peek = function () { return this.a[0]; };
+  Heap.prototype.size = function () { return this.a.length; };
+
+  /**
+   * Run one policy. Returns per-candidate start/end/agent, dispatch order, and the find curve.
+   * The learned policy decides each dispatch from research results completed by then, and nothing else.
+   */
+  function run(pool, policy, ctx) {
+    const n = pool.length, K = Math.max(1, ctx.agents | 0);
+    const start = new Float64Array(n), end = new Float64Array(n), agent = new Int16Array(n), pos = new Int32Array(n);
+    const order = [];
+    const agents = new Heap();
+    for (let a = 0; a < K; a++) agents.push(0, a);
+
+    let next;
+    if (policy === "learned") next = learnedChooser(pool, ctx);
+    else {
+      const q = staticOrder(pool, policy, ctx);
+      let k = 0;
+      next = { take: () => (k < q.length ? q[k++] : -1), learn: () => {} };
+    }
+    const done = new Heap();
+    let lastStart = 0;
+    for (;;) {
+      const [t, a] = agents.pop();
+      while (done.size() && done.peek()[0] <= t) next.learn(done.pop()[1]);
+      const c = next.take();
+      if (c < 0) break;
+      start[c] = t; end[c] = t + pool[c].dur; agent[c] = a; pos[c] = order.length; order.push(c);
+      lastStart = t;
+      done.push(end[c], c);
+      agents.push(end[c], a);
+    }
+    // agent-minutes worked by time t: every agent is busy until the last dispatch
+    const workAt = (t) => {
+      if (t <= lastStart) return K * t;
+      let w = 0;
+      for (let i = 0; i < n; i++) if (start[i] < t) w += Math.min(t - start[i], pool[i].dur);
+      return w;
+    };
+    const finds = [];
+    for (let i = 0; i < n; i++) if (pool[i].great) finds.push(i);
+    finds.sort((x, y) => end[x] - end[y]);
+    const findT = finds.map((i) => end[i]);
+    const findH = findT.map((t) => workAt(t) / 60);
+    let finish = 0;
+    for (let i = 0; i < n; i++) finish = Math.max(finish, end[i]);
+    return { policy, start, end, agent, pos, order, finds, findT, findH, finish, K, workAt };
+  }
+
+  /** Thompson sampling over first-pass buckets (label x profile type), starting from no knowledge. */
+  function learnedChooser(pool, ctx) {
+    const r = rng32((ctx.seed ^ 0x9e3779b9) >>> 0);
+    const buckets = new Map();
+    for (const c of pool) {
+      const k = c.label + "|" + c.kind;
+      if (!buckets.has(k)) buckets.set(k, { key: k, kind: c.kind, items: [], next: 0, n: 0, g: 0 });
+      buckets.get(k).items.push(c.i);
+    }
+    const B = [...buckets.values()];
+    let R = 0, G = 0;
+    const durSum = { full: 0, sparse: 0 }, durN = { full: 0, sparse: 0 };
+    const s = ctx.learnStrength ?? 1;
+    return {
+      take() {
+        const pHat = (G + 0.5) / (R + 1);
+        let best = null, bestV = -1;
+        for (const b of B) {
+          if (b.next >= b.items.length) continue;
+          const theta = beta(r, s * pHat + b.g, s * (1 - pHat) + (b.n - b.g));
+          const d = durN[b.kind] ? durSum[b.kind] / durN[b.kind] : ctx.median;
+          const v = theta / d;
+          if (v > bestV) { bestV = v; best = b; }
+        }
+        if (!best) return -1;
+        return best.items[best.next++];
+      },
+      learn(i) {
+        const c = pool[i], b = buckets.get(c.label + "|" + c.kind);
+        b.n++; R++;
+        if (c.great) { b.g++; G++; }
+        durSum[c.kind] += c.dur; durN[c.kind]++;
+      },
+      buckets: B,
+    };
+  }
+
+  function context(params, cal, extra) {
+    const prior = priorOf(params);
+    return Object.assign({
+      agents: params.agents, median: params.median, sigma: params.sigma, sparseMult: params.sparseMult,
+      placement: params.placement, seed: params.seed, prior, post: posterior(cal, prior, 0.5),
+    }, extra || {});
+  }
+
+  /** Summary numbers for one run. */
+  function metrics(res, pool, budgetH) {
+    const G = res.finds.length;
+    const at = (q) => (G ? res.findH[Math.max(0, Math.ceil(q * G) - 1)] : NaN);
+    let hidden = 0, hiddenFound = 0, inBudget = 0;
+    for (let k = 0; k < G; k++) {
+      const c = pool[res.finds[k]];
+      if (c.label !== "great") { hidden++; if (res.findH[k] <= budgetH) hiddenFound++; }
+      if (res.findH[k] <= budgetH) inBudget++;
+    }
+    return { G, h50: at(0.5), h90: at(0.9), h100: at(1), inBudget, hidden, hiddenFound, first: G ? res.findT[0] / 60 : NaN };
+  }
+
+  /** Where a single candidate would sit in a static queue built over a pool. */
+  function rankIn(pool, policy, ctx, label, kind) {
+    let ahead = 0, tie = 0;
+    if (policy === "label") {
+      const me = labelRank(label, ctx.placement);
+      for (const c of pool) { const v = labelRank(c.label, ctx.placement); if (v < me) ahead++; else if (v === me) tie++; }
+    } else if (policy === "calibrated") {
+      const me = calibratedValue(label, kind, ctx);
+      for (const c of pool) { const v = calibratedValue(c.label, c.kind, ctx); if (v > me + 1e-15) ahead++; else if (Math.abs(v - me) <= 1e-15) tie++; }
+    } else return null;
+    return { best: ahead + 1, worst: ahead + tie + 1, mid: ahead + Math.round(tie / 2) + 1 };
+  }
+
+  function quantile(xs, q) {
+    const a = xs.filter((x) => Number.isFinite(x)).sort((x, y) => x - y);
+    if (!a.length) return NaN;
+    const p = (a.length - 1) * q, lo = Math.floor(p), hi = Math.ceil(p);
+    return a[lo] + (a[hi] - a[lo]) * (p - lo);
+  }
+
+  const api = { TIERS, LABELS, POLICIES, PLACEMENT, rng32, makePool, likelihood, posterior, priorOf, labelsOf, context, run, metrics, rankIn, quantile, labelRank, calibratedValue, expectedDur };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.Sim = api;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+(() => {
+"use strict";
+const DATA = {"meta": {"model": "claude-sonnet-5-5", "effort": "low", "repeats": 2, "n_people": 21, "tiers": {"poor": 3, "okay": 6, "good": 6, "great": 6}, "observations": {"naive": 168, "instructed": 168, "facts_first": 168}, "mock": false, "thin_words": 60, "slot": "⁣PROFILE⁣"}, "counts": {"naive": {"full": {"great": {"great": 29, "good": 7}, "good": {"good": 30, "okay": 6}, "okay": {"okay": 24, "good": 12}, "poor": {"okay": 12, "poor": 6}}, "sparse": {"great": {"okay": 10, "poor": 2}, "good": {"okay": 11, "poor": 1}, "okay": {"okay": 11, "poor": 1}, "poor": {"okay": 6}}}, "instructed": {"full": {"great": {"great": 32, "good": 4}, "good": {"good": 30, "research": 5, "okay": 1}, "okay": {"research": 21, "good": 12, "okay": 3}, "poor": {"research": 11, "okay": 1, "poor": 6}}, "sparse": {"great": {"research": 12}, "good": {"research": 12}, "okay": {"research": 12}, "poor": {"research": 6}}}, "facts_first": {"full": {"great": {"great": 36}, "good": {"good": 32, "okay": 4}, "okay": {"okay": 33, "good": 2, "poor": 1}, "poor": {"poor": 18}}, "sparse": {"great": {"research": 12}, "good": {"research": 12}, "okay": {"research": 12}, "poor": {"research": 6}}}}, "candidates": [{"id": "A01", "brief": "A", "tier": "great", "title": "Senior Frontend Engineer", "years": 6, "plain": "Candidate #A01\nSenior Frontend Engineer at Saltmarsh\n\nExperience\nSenior Frontend Engineer - Saltmarsh (seed-stage, 8 people) · 2023-present\n- Rewrote the checkout flow in React with TypeScript, lifting conversion by 31%\n- Built a GLSL shader pipeline for image filters, processing 30k images daily\n- Created the company design system: 24 shared components adopted by 7 product teams\n\nProduct Engineer - Ferncastle (Series C, 220 people) · 2022-2023\n- Migrated CI from Jenkins to GitHub Actions, cutting build times by 35%\n- Wrote internal scripts in Python to automate 4 weekly reports\n- Added end-to-end tests with Playwright, raising test coverage by 7 points\n\nSoftware Engineer - Tidewell (public company, 3800 people) · 2020-2022\n- Shipped 4 features from the sprint backlog in Angular\n- Led the launch of the web editor (used by 6k creators), working directly with customers and design\n- Built the marketing site in Vue.js, serving 24k monthly visitors\n\nEducation: BSc Computer Science\nSkills: Angular, GLSL, GitHub Actions, Jenkins, Playwright, Python, React, TypeScript, Vue.js\n", "sparse": "Candidate #A01\nSenior Frontend Engineer at Saltmarsh\n\nExperience\nSenior Frontend Engineer - Saltmarsh · 2023-present\nProduct Engineer - Ferncastle · 2022-2023\nSoftware Engineer - Tidewell · 2020-2022\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["great", "great"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["great", "great"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["great", "great"], "sparse": ["research", "research"]}}}, {"id": "A02", "brief": "A", "tier": "great", "title": "Senior Frontend Engineer", "years": 6, "plain": "Candidate #A02\nSenior Frontend Engineer at Tallyhand\n\nExperience\nSenior Frontend Engineer - Tallyhand (Series C, 480 people) · 2022-present\n- Wrote WebGL shaders for the 3D product preview, rendering 4k models a day\n- Managed a squad of 4 frontend engineers\n- Owned the component library and Figma-to-code design tokens used across 6 apps\n\nProduct Engineer - Lumen Harbor (Series C, 340 people) · 2020-2022\n- Owned the onboarding experience end to end, from spec to launch, cutting drop-off by 18%\n- Added end-to-end tests with Playwright, raising test coverage by 14 points\n- Rewrote the checkout flow in React with TypeScript, lifting conversion by 35%\n\nEducation: BSc Computer Science\nSkills: Figma, Playwright, React, TypeScript, WebGL\n", "sparse": "Candidate #A02\nSenior Frontend Engineer at Tallyhand\n\nExperience\nSenior Frontend Engineer - Tallyhand · 2022-present\nProduct Engineer - Lumen Harbor · 2020-2022\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["great", "great"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["great", "great"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["great", "great"], "sparse": ["research", "research"]}}}, {"id": "A03", "brief": "A", "tier": "good", "title": "Product Engineer", "years": 4, "plain": "Candidate #A03\nProduct Engineer at Saltmarsh\n\nExperience\nProduct Engineer - Saltmarsh (seed-stage, 8 people) · 2024-present\n- Improved the Lighthouse performance score on landing pages by 35 points\n- Wrote internal scripts in Python to automate 90 weekly reports\n- Owned the onboarding experience end to end, from spec to launch, cutting drop-off by 7%\n\nFrontend Engineer - Driftwood Analytics (public company, 5200 people) · 2022-2024\n- Created the company design system: 40 shared components adopted by 11 product teams\n- Rewrote the checkout flow in React with TypeScript, lifting conversion by 35%\n- Added end-to-end tests with Playwright, raising test coverage by 27 points\n\nEducation: BSc Computer Science\nSkills: Lighthouse, Playwright, Python, React, TypeScript\n", "sparse": "Candidate #A03\nProduct Engineer at Saltmarsh\n\nExperience\nProduct Engineer - Saltmarsh · 2024-present\nFrontend Engineer - Driftwood Analytics · 2022-2024\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["good", "good"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["good", "good"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["good", "good"], "sparse": ["research", "research"]}}}, {"id": "A04", "brief": "A", "tier": "good", "title": "Product Engineer", "years": 4, "plain": "Candidate #A04\nProduct Engineer at Nimbusfield\n\nExperience\nProduct Engineer - Nimbusfield (public company, 2400 people) · 2024-present\n- Owned the component library and Figma-to-code design tokens used across 9 apps\n- Migrated CI from Jenkins to GitHub Actions, cutting build times by 27%\n- Led the launch of the web editor (used by 55k creators), working directly with customers and design\n\nProduct Engineer - Oakhollow (Series C, 610 people) · 2022-2024\n- Rewrote the checkout flow in React with TypeScript, lifting conversion by 9%\n- Added end-to-end tests with Playwright, raising test coverage by 31 points\n\nEducation: BSc Computer Science\nSkills: Figma, GitHub Actions, Jenkins, Playwright, React, TypeScript\n", "sparse": "Candidate #A04\nProduct Engineer at Nimbusfield\n\nExperience\nProduct Engineer - Nimbusfield · 2024-present\nProduct Engineer - Oakhollow · 2022-2024\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["good", "good"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["good", "good"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["good", "good"], "sparse": ["research", "research"]}}}, {"id": "A05", "brief": "A", "tier": "okay", "title": "Product Engineer", "years": 4, "plain": "Candidate #A05\nProduct Engineer at Nimbusfield\n\nExperience\nProduct Engineer - Nimbusfield (public company, 3800 people) · 2024-present\n- Improved the Lighthouse performance score on landing pages by 12 points\n- Added end-to-end tests with Playwright, raising test coverage by 12 points\n- Created the company design system: 30 shared components adopted by 9 product teams\n\nFrontend Engineer - Tidewell (public company, 8100 people) · 2022-2024\n- Mentored 3 junior engineers through their first year\n- Led the launch of the web editor (used by 18k creators), working directly with customers and design\n\nEducation: BSc Computer Science\nSkills: Lighthouse, Playwright\n", "sparse": "Candidate #A05\nProduct Engineer at Nimbusfield\n\nExperience\nProduct Engineer - Nimbusfield · 2024-present\nFrontend Engineer - Tidewell · 2022-2024\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["okay", "okay"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["research", "research"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["okay", "okay"], "sparse": ["research", "research"]}}}, {"id": "A06", "brief": "A", "tier": "okay", "title": "Senior Frontend Engineer", "years": 8, "plain": "Candidate #A06\nSenior Frontend Engineer at Ferncastle\n\nExperience\nSenior Frontend Engineer - Ferncastle (seed-stage, 22 people) · 2021-present\n- Built the customer dashboard in TypeScript and React, used by 40k weekly users\n- Built the marketing site in Vue.js, serving 12k monthly visitors\n- Wrote internal scripts in Python to automate 90 weekly reports\n\nFrontend Engineer - Cinderpath (Series C, 220 people) · 2020-2021\n- Improved the Lighthouse performance score on landing pages by 14 points\n- Added end-to-end tests with Playwright, raising test coverage by 7 points\n\nSoftware Engineer - Halcyon Health (public company, 2400 people) · 2018-2020\n- Shipped 12 features from the sprint backlog in Angular\n- Created the company design system: 55 shared components adopted by 11 product teams\n\nEducation: BSc Computer Science\nSkills: Angular, Lighthouse, Playwright, Python, React, TypeScript, Vue.js\n", "sparse": "Candidate #A06\nSenior Frontend Engineer at Ferncastle\n\nExperience\nSenior Frontend Engineer - Ferncastle · 2021-present\nFrontend Engineer - Cinderpath · 2020-2021\nSoftware Engineer - Halcyon Health · 2018-2020\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["good", "good"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["good", "good"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["okay", "okay"], "sparse": ["research", "research"]}}}, {"id": "A07", "brief": "A", "tier": "poor", "title": "Product Engineer", "years": 5, "plain": "Candidate #A07\nProduct Engineer at Verdant Freight\n\nExperience\nProduct Engineer - Verdant Freight (seed-stage, 17 people) · 2025-present\n- Shipped 6 features from the sprint backlog in Angular\n- Migrated CI from Jenkins to GitHub Actions, cutting build times by 18%\n- Built a GLSL shader pipeline for image filters, processing 8k images daily\n\nProduct Engineer - Brightpath (public company, 2400 people) · 2021-2025\n- Led the launch of the web editor (used by 18k creators), working directly with customers and design\n- Built the marketing site in Vue.js, serving 6k monthly visitors\n- Wrote internal scripts in Python to automate 90 weekly reports\n\nEducation: BSc Computer Science\nSkills: Angular, GLSL, GitHub Actions, Jenkins, Python, Vue.js\n", "sparse": "Candidate #A07\nProduct Engineer at Verdant Freight\n\nExperience\nProduct Engineer - Verdant Freight · 2025-present\nProduct Engineer - Brightpath · 2021-2025\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["okay", "okay"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["research", "research"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["poor", "poor"], "sparse": ["research", "research"]}}}, {"id": "B01", "brief": "B", "tier": "great", "title": "Senior Backend Engineer", "years": 12, "plain": "Candidate #B01\nSenior Backend Engineer at Cinderpath\n\nExperience\nSenior Backend Engineer - Cinderpath (Series C, 340 people) · 2024-present\n- Wrote the event ingestion service in Go, handling 40k requests per second\n- Ran 5 production Kubernetes clusters across 3 regions\n- Designed a sharded queueing system processing 18 million events per day\n\nSite Reliability Engineer - Corvid Systems (Series C, 220 people) · 2020-2024\n- Maintained a MySQL reporting database of 8 GB\n- Set up Grafana dashboards covering 30 key service metrics\n- Tuned Postgres for a 7 TB dataset, cutting p99 query latency by 22%\n\nSoftware Engineer - Paperlane (Series C, 220 people) · 2014-2020\n- Managed all infrastructure as code in Terraform across 11 AWS accounts\n- Wrote Java services for the billing team, 5 services in total\n- Built internal admin tools in Ruby on Rails used by 18 support staff\n\nEducation: BSc Computer Science\nSkills: AWS, Go, Grafana, Java, Kubernetes, MySQL, Postgres, Ruby on Rails, Terraform\n", "sparse": "Candidate #B01\nSenior Backend Engineer at Cinderpath\n\nExperience\nSenior Backend Engineer - Cinderpath · 2024-present\nSite Reliability Engineer - Corvid Systems · 2020-2024\nSoftware Engineer - Paperlane · 2014-2020\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["great", "great"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["great", "great"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["great", "great"], "sparse": ["research", "research"]}}}, {"id": "B02", "brief": "B", "tier": "great", "title": "Senior Backend Engineer", "years": 11, "plain": "Candidate #B02\nSenior Backend Engineer at Corvid Systems\n\nExperience\nSenior Backend Engineer - Corvid Systems (public company, 3800 people) · 2020-present\n- Managed all infrastructure as code in Terraform across 11 AWS accounts\n- Led incident response for 6 SEV-1 outages and ran the on-call rotation\n\nSoftware Engineer - Tidewell (Series C, 340 people) · 2015-2020\n- Tuned Postgres for a 5 TB dataset, cutting p99 query latency by 31%\n- Designed a sharded queueing system processing 40 million events per day\n- Wrote the event ingestion service in Go, handling 6k requests per second\n- Migrated 4 services from VMs to Kubernetes with zero downtime\n\nEducation: BSc Computer Science\nSkills: AWS, Go, Kubernetes, Postgres, Terraform\n", "sparse": "Candidate #B02\nSenior Backend Engineer at Corvid Systems\n\nExperience\nSenior Backend Engineer - Corvid Systems · 2020-present\nSoftware Engineer - Tidewell · 2015-2020\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["good", "good"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["great", "great"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["great", "great"], "sparse": ["research", "research"]}}}, {"id": "B03", "brief": "B", "tier": "good", "title": "Senior Backend Engineer", "years": 11, "plain": "Candidate #B03\nSenior Backend Engineer at Mapleforge\n\nExperience\nSenior Backend Engineer - Mapleforge (Series C, 340 people) · 2019-present\n- Wrote Java services for the billing team, 3 services in total\n- Automated deploys with Ansible for 11 legacy servers\n\nSoftware Engineer - Lumen Harbor (Series C, 220 people) · 2015-2019\n- Built a Go-based rate limiter used by 4 internal services\n- Migrated 6 services from VMs to Kubernetes with zero downtime\n- Tuned Postgres for a 5 TB dataset, cutting p99 query latency by 27%\n- Designed a sharded queueing system processing 4 million events per day\n\nEducation: BSc Computer Science\nSkills: Ansible, Go, Java, Kubernetes, Postgres\n", "sparse": "Candidate #B03\nSenior Backend Engineer at Mapleforge\n\nExperience\nSenior Backend Engineer - Mapleforge · 2019-present\nSoftware Engineer - Lumen Harbor · 2015-2019\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["okay", "okay"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["research", "okay"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["okay", "okay"], "sparse": ["research", "research"]}}}, {"id": "B04", "brief": "B", "tier": "good", "title": "Senior Backend Engineer", "years": 7, "plain": "Candidate #B04\nSenior Backend Engineer at Ferncastle\n\nExperience\nSenior Backend Engineer - Ferncastle (Series C, 220 people) · 2023-present\n- Ran 6 production Kubernetes clusters across 4 regions\n- Built a Go-based rate limiter used by 7 internal services\n\nSoftware Engineer - Corvid Systems (public company, 2400 people) · 2020-2023\n- Automated deploys with Ansible for 4 legacy servers\n- Designed a sharded queueing system processing 55 million events per day\n\nPlatform Engineer - Verdant Freight (public company, 2400 people) · 2019-2020\n- Built internal admin tools in Ruby on Rails used by 12 support staff\n- Set up Grafana dashboards covering 18 key service metrics\n\nEducation: BSc Computer Science\nSkills: Ansible, Go, Grafana, Kubernetes, Ruby on Rails\n", "sparse": "Candidate #B04\nSenior Backend Engineer at Ferncastle\n\nExperience\nSenior Backend Engineer - Ferncastle · 2023-present\nSoftware Engineer - Corvid Systems · 2020-2023\nPlatform Engineer - Verdant Freight · 2019-2020\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["good", "good"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["good", "good"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["good", "good"], "sparse": ["research", "research"]}}}, {"id": "B05", "brief": "B", "tier": "okay", "title": "Senior Backend Engineer", "years": 8, "plain": "Candidate #B05\nSenior Backend Engineer at Tallyhand\n\nExperience\nSenior Backend Engineer - Tallyhand (public company, 5200 people) · 2021-present\n- Tuned Postgres for a 9 TB dataset, cutting p99 query latency by 27%\n- Ran 3 production Kubernetes clusters across 2 regions\n\nPlatform Engineer - Lumen Harbor (Series C, 480 people) · 2018-2021\n- Ran on-call for a platform team of 6 engineers\n- Wrote the event ingestion service in Go, handling 18k requests per second\n- Maintained a MySQL reporting database of 55 GB\n\nEducation: BSc Computer Science\nSkills: Go, Kubernetes, MySQL, Postgres\n", "sparse": "Candidate #B05\nSenior Backend Engineer at Tallyhand\n\nExperience\nSenior Backend Engineer - Tallyhand · 2021-present\nPlatform Engineer - Lumen Harbor · 2018-2021\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["good", "good"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["good", "good"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["okay", "okay"], "sparse": ["research", "research"]}}}, {"id": "B06", "brief": "B", "tier": "okay", "title": "Senior Backend Engineer", "years": 12, "plain": "Candidate #B06\nSenior Backend Engineer at Ironbark\n\nExperience\nSenior Backend Engineer - Ironbark (Series C, 220 people) · 2016-present\n- Wrote Java services for the billing team, 11 services in total\n- Led incident response for 2 SEV-1 outages and ran the on-call rotation\n- Automated deploys with Ansible for 7 legacy servers\n\nSite Reliability Engineer - Saltmarsh (public company, 8100 people) · 2014-2016\n- Wrote the event ingestion service in Go, handling 12k requests per second\n- Migrated 5 services from VMs to Kubernetes with zero downtime\n- Set up Grafana dashboards covering 8 key service metrics\n\nEducation: BSc Computer Science\nSkills: Ansible, Go, Grafana, Java, Kubernetes\n", "sparse": "Candidate #B06\nSenior Backend Engineer at Ironbark\n\nExperience\nSenior Backend Engineer - Ironbark · 2016-present\nSite Reliability Engineer - Saltmarsh · 2014-2016\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["okay", "okay"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["research", "okay"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["okay", "okay"], "sparse": ["research", "research"]}}}, {"id": "B07", "brief": "B", "tier": "poor", "title": "Senior Backend Engineer", "years": 12, "plain": "Candidate #B07\nSenior Backend Engineer at Orbitwise\n\nExperience\nSenior Backend Engineer - Orbitwise (public company, 2400 people) · 2025-present\n- Built internal admin tools in Ruby on Rails used by 4 support staff\n- Automated deploys with Ansible for 5 legacy servers\n\nPlatform Engineer - Tidewell (public company, 5200 people) · 2023-2025\n- Tuned Postgres for a 6 TB dataset, cutting p99 query latency by 31%\n- Managed all infrastructure as code in Terraform across 7 AWS accounts\n\nPlatform Engineer - Verdant Freight (public company, 8100 people) · 2014-2023\n- Maintained a MySQL reporting database of 4 GB\n- Designed a sharded queueing system processing 8 million events per day\n- Wrote Java services for the billing team, 9 services in total\n\nEducation: BSc Computer Science\nSkills: AWS, Ansible, Java, MySQL, Postgres, Ruby on Rails, Terraform\n", "sparse": "Candidate #B07\nSenior Backend Engineer at Orbitwise\n\nExperience\nSenior Backend Engineer - Orbitwise · 2025-present\nPlatform Engineer - Tidewell · 2023-2025\nPlatform Engineer - Verdant Freight · 2014-2023\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["okay", "okay"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["research", "okay"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["poor", "poor"], "sparse": ["research", "research"]}}}, {"id": "C01", "brief": "C", "tier": "great", "title": "Data Scientist", "years": 5, "plain": "Candidate #C01\nData Scientist at Larkspur Labs\n\nExperience\nData Scientist - Larkspur Labs (public company, 3800 people) · 2022-present\n- Maintained the Python model-serving codebase for 11 production models\n- Shipped a RAG-based support assistant to production, resolving 7% of tickets without escalation\n- Built the evaluation pipeline for the company's LLM features: 55 test cases run on every release\n\nSoftware Engineer - Halcyon Health (public company, 2400 people) · 2021-2022\n- Fine-tuned transformer models in PyTorch on 24 million labelled examples\n- Ran 4 A/B pricing experiments with the growth team\n- Operated a Qdrant vector database holding 24 million vectors\n\nEducation: BSc Computer Science\nSkills: LLM, PyTorch, Python, Qdrant, RAG\n", "sparse": "Candidate #C01\nData Scientist at Larkspur Labs\n\nExperience\nData Scientist - Larkspur Labs · 2022-present\nSoftware Engineer - Halcyon Health · 2021-2022\n\nEducation: BSc Computer Science\n", "labels": {"instructed": {"plain": ["great", "great"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["great", "great"], "sparse": ["research", "research"]}, "naive": {"sparse": ["poor", "poor"], "plain": ["great", "great"]}}}, {"id": "C02", "brief": "C", "tier": "great", "title": "Machine Learning Engineer", "years": 8, "plain": "Candidate #C02\nMachine Learning Engineer at Saltmarsh\n\nExperience\nMachine Learning Engineer - Saltmarsh (public company, 5200 people) · 2024-present\n- Exposed model inference through FastAPI services handling 70 requests per second\n- Ran 40 A/B pricing experiments with the growth team\n\nData Scientist - Nimbusfield (public company, 5200 people) · 2023-2024\n- Created Tableau dashboards for 3 business teams\n- Designed offline evaluation suites for 14 ML models, gating releases on regression checks\n\nData Scientist - Ferncastle (Series C, 340 people) · 2018-2023\n- Fine-tuned transformer models in PyTorch on 4 million labelled examples\n- Maintained the Python model-serving codebase for 14 production models\n- Shipped a RAG-based support assistant to production, resolving 7% of tickets without escalation\n\nEducation: BSc Computer Science\nSkills: FastAPI, PyTorch, Python, RAG, Tableau\n", "sparse": "Candidate #C02\nMachine Learning Engineer at Saltmarsh\n\nExperience\nMachine Learning Engineer - Saltmarsh · 2024-present\nData Scientist - Nimbusfield · 2023-2024\nData Scientist - Ferncastle · 2018-2023\n\nEducation: BSc Computer Science\n", "labels": {"instructed": {"plain": ["great", "great"], "sparse": ["research", "research"]}, "naive": {"plain": ["great", "great"], "sparse": ["okay", "okay"]}, "facts_first": {"plain": ["great", "great"], "sparse": ["research", "research"]}}}, {"id": "C03", "brief": "C", "tier": "good", "title": "Data Scientist", "years": 5, "plain": "Candidate #C03\nData Scientist at Tallyhand\n\nExperience\nData Scientist - Tallyhand (Series C, 610 people) · 2023-present\n- Built churn models in scikit-learn that reduced churn by 27%\n- Created Tableau dashboards for 14 business teams\n- Built an LLM agent in production that drafts 15k customer emails a month\n\nData Scientist - Nimbusfield (public company, 5200 people) · 2021-2023\n- Maintained the Python model-serving codebase for 11 production models\n- Built the evaluation pipeline for the company's LLM features: 90 test cases run on every release\n\nEducation: BSc Computer Science\nSkills: LLM, Python, Tableau, scikit-learn\n", "sparse": "Candidate #C03\nData Scientist at Tallyhand\n\nExperience\nData Scientist - Tallyhand · 2023-present\nData Scientist - Nimbusfield · 2021-2023\n\nEducation: BSc Computer Science\n", "labels": {"instructed": {"plain": ["good", "good"], "sparse": ["research", "research"]}, "naive": {"plain": ["good", "good"], "sparse": ["poor", "okay"]}, "facts_first": {"plain": ["good", "good"], "sparse": ["research", "research"]}}}, {"id": "C04", "brief": "C", "tier": "good", "title": "Machine Learning Engineer", "years": 8, "plain": "Candidate #C04\nMachine Learning Engineer at Larkspur Labs\n\nExperience\nMachine Learning Engineer - Larkspur Labs (public company, 8100 people) · 2019-present\n- Maintained the Python model-serving codebase for 6 production models\n- Designed offline evaluation suites for 14 ML models, gating releases on regression checks\n- Built an LLM agent in production that drafts 15k customer emails a month\n\nSoftware Engineer - Lumen Harbor (Series C, 340 people) · 2018-2019\n- Created Tableau dashboards for 5 business teams\n- Built Spark jobs in Scala processing 18 GB a day\n\nEducation: BSc Computer Science\nSkills: LLM, Python, Scala, Spark, Tableau\n", "sparse": "Candidate #C04\nMachine Learning Engineer at Larkspur Labs\n\nExperience\nMachine Learning Engineer - Larkspur Labs · 2019-present\nSoftware Engineer - Lumen Harbor · 2018-2019\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["good", "good"], "sparse": ["okay", "okay"]}, "instructed": {"plain": ["good", "good"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["good", "good"], "sparse": ["research", "research"]}}}, {"id": "C05", "brief": "C", "tier": "okay", "title": "Machine Learning Engineer", "years": 9, "plain": "Candidate #C05\nMachine Learning Engineer at Halcyon Health\n\nExperience\nMachine Learning Engineer - Halcyon Health (Series C, 610 people) · 2023-present\n- Built data pipelines in Python processing 8 GB a day\n- Designed offline evaluation suites for 11 ML models, gating releases on regression checks\n- Built Spark jobs in Scala processing 40 GB a day\n\nSoftware Engineer - Orbitwise (public company, 3800 people) · 2019-2023\n- Built churn models in scikit-learn that reduced churn by 12%\n- Ran 8 A/B pricing experiments with the growth team\n- Created Tableau dashboards for 3 business teams\n\nSenior ML Engineer - Saltmarsh (Series C, 340 people) · 2017-2019\n- Ran retrieval over 30 million embeddings stored in pgvector\n\nEducation: BSc Computer Science\nSkills: Python, Scala, Spark, Tableau, pgvector, scikit-learn\n", "sparse": "Candidate #C05\nMachine Learning Engineer at Halcyon Health\n\nExperience\nMachine Learning Engineer - Halcyon Health · 2023-present\nSoftware Engineer - Orbitwise · 2019-2023\nSenior ML Engineer - Saltmarsh · 2017-2019\n\nEducation: BSc Computer Science\n", "labels": {"instructed": {"plain": ["research", "research"], "sparse": ["research", "research"]}, "naive": {"plain": ["okay", "okay"], "sparse": ["okay", "okay"]}, "facts_first": {"plain": ["okay", "okay"], "sparse": ["research", "research"]}}}, {"id": "C06", "brief": "C", "tier": "okay", "title": "Data Scientist", "years": 5, "plain": "Candidate #C06\nData Scientist at Verdant Freight\n\nExperience\nData Scientist - Verdant Freight (Series C, 480 people) · 2023-present\n- Maintained the Python model-serving codebase for 7 production models\n- Fine-tuned transformer models in PyTorch on 90 million labelled examples\n- Designed offline evaluation suites for 11 ML models, gating releases on regression checks\n\nData Scientist - Quarry Lane (public company, 3800 people) · 2021-2023\n- Built Spark jobs in Scala processing 4 GB a day\n- Created Tableau dashboards for 5 business teams\n- Ran 15 A/B pricing experiments with the growth team\n\nEducation: BSc Computer Science\nSkills: PyTorch, Python, Scala, Spark, Tableau\n", "sparse": "Candidate #C06\nData Scientist at Verdant Freight\n\nExperience\nData Scientist - Verdant Freight · 2023-present\nData Scientist - Quarry Lane · 2021-2023\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["okay", "okay"], "sparse": ["poor", "okay"]}, "instructed": {"plain": ["research", "research"], "sparse": ["research", "research"]}, "facts_first": {"plain": ["okay", "okay"], "sparse": ["research", "research"]}}}, {"id": "C07", "brief": "C", "tier": "poor", "title": "Machine Learning Engineer", "years": 6, "plain": "Candidate #C07\nMachine Learning Engineer at Halcyon Health\n\nExperience\nMachine Learning Engineer - Halcyon Health (public company, 5200 people) · 2022-present\n- Created Tableau dashboards for 11 business teams\n- Built Spark jobs in Scala processing 15 GB a day\n\nData Scientist - Corvid Systems (Series C, 220 people) · 2020-2022\n- Ran 24 A/B pricing experiments with the growth team\n- Built churn models in scikit-learn that reduced churn by 27%\n\nEducation: BSc Computer Science\nSkills: Scala, Spark, Tableau, scikit-learn\n", "sparse": "Candidate #C07\nMachine Learning Engineer at Halcyon Health\n\nExperience\nMachine Learning Engineer - Halcyon Health · 2022-present\nData Scientist - Corvid Systems · 2020-2022\n\nEducation: BSc Computer Science\n", "labels": {"naive": {"plain": ["poor", "poor"], "sparse": ["okay", "okay"]}, "facts_first": {"plain": ["poor", "poor"], "sparse": ["research", "research"]}, "instructed": {"plain": ["poor", "poor"], "sparse": ["research", "research"]}}}], "briefs": {"A": {"title": "Senior Product Engineer", "company": "Quillmark", "text": "Role: Senior Product Engineer at Quillmark\nQuillmark is a seed-stage startup building collaborative design tools. We want an engineer with real product taste who can own features end to end.\n\nMust-haves:\n- Production TypeScript and React experience\n- Built or owned a design system or component library\n- Owned user-facing product features end to end\n\nNice-to-haves:\n- WebGL, shaders or creative coding\n- Experience at an early-stage startup\n- Mentoring or leading engineers\n\nExperience: 4-10 years", "criteria": [{"id": "ts_react", "label": "Production TypeScript and React experience", "kind": "must"}, {"id": "design_systems", "label": "Built or owned a design system or component library", "kind": "must"}, {"id": "product_ownership", "label": "Owned user-facing product features end to end", "kind": "must"}, {"id": "graphics", "label": "WebGL, shaders or creative coding", "kind": "nice"}, {"id": "early_stage", "label": "Experience at an early-stage startup", "kind": "nice"}, {"id": "mentoring", "label": "Mentoring or leading engineers", "kind": "nice"}], "prompts": {"naive": "You are the first-pass screening step in an automated sourcing pipeline. You see only the candidate's profile text; no web research has been done yet. Assess how well the candidate fits the role brief.\n\nBrief-ID: A\nRole: Senior Product Engineer at Quillmark\nQuillmark is a seed-stage startup building collaborative design tools. We want an engineer with real product taste who can own features end to end.\n\nMust-haves:\n- Production TypeScript and React experience\n- Built or owned a design system or component library\n- Owned user-facing product features end to end\n\nNice-to-haves:\n- WebGL, shaders or creative coding\n- Experience at an early-stage startup\n- Mentoring or leading engineers\n\nExperience: 4-10 years\n\nRating scale:\n- great: meets every must-have and several nice-to-haves\n- good: meets the must-haves\n- okay: meets some must-haves; notable gaps\n- poor: little alignment with the brief\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only, in this shape: {\"rating\": \"great\" | \"good\" | \"okay\" | \"poor\", \"reason\": \"<one or two sentences>\"}", "instructed": "You are the first-pass screening step in an automated sourcing pipeline. You see only the candidate's profile text; no web research has been done yet. Assess how well the candidate fits the role brief.\n\nBrief-ID: A\nRole: Senior Product Engineer at Quillmark\nQuillmark is a seed-stage startup building collaborative design tools. We want an engineer with real product taste who can own features end to end.\n\nMust-haves:\n- Production TypeScript and React experience\n- Built or owned a design system or component library\n- Owned user-facing product features end to end\n\nNice-to-haves:\n- WebGL, shaders or creative coding\n- Experience at an early-stage startup\n- Mentoring or leading engineers\n\nExperience: 4-10 years\n\nRating scale:\n- great: meets every must-have and several nice-to-haves\n- good: meets the must-haves\n- okay: meets some must-haves; notable gaps\n- poor: little alignment with the brief\n\nJudge only the substance of the candidate's experience. Ignore writing style, polish, tone and length. If the profile does not mention something, treat it as unknown rather than as evidence that the candidate lacks it. If the profile is too thin to judge fairly, set needs_research to true.\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only, in this shape: {\"rating\": \"great\" | \"good\" | \"okay\" | \"poor\", \"reason\": \"<one or two sentences>\", \"needs_research\": true | false}", "facts_first": "You extract evidence from candidate profiles for a recruiting pipeline. You only report what the text explicitly states, and you quote it exactly.\n\nBrief-ID: A\nFor each criterion below, decide what the profile explicitly states:\n- ts_react: Production TypeScript and React experience\n- design_systems: Built or owned a design system or component library\n- product_ownership: Owned user-facing product features end to end\n- graphics: WebGL, shaders or creative coding\n- early_stage: Experience at an early-stage startup\n- mentoring: Mentoring or leading engineers\n\nstatus = \"evidenced\" if the profile explicitly shows the candidate meets it, \"contradicted\" if the profile explicitly shows they do not, otherwise \"not_stated\".\nFor evidenced or contradicted, quote the shortest exact span from the profile that shows it (copy it character for character, at most 30 words). Use an empty quote for not_stated.\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only: {\"criteria\": [{\"id\": \"...\", \"status\": \"...\", \"quote\": \"...\"}, ...]}"}}, "B": {"title": "Senior Infrastructure Engineer", "company": "Copperline", "text": "Role: Senior Infrastructure Engineer at Copperline\nCopperline runs payments infrastructure for online marketplaces. We need someone who has run large distributed systems in production.\n\nMust-haves:\n- Production Go experience\n- Operated Kubernetes in production\n- Built distributed systems at high scale\n\nNice-to-haves:\n- Deep Postgres experience\n- Led incident response or on-call\n- Infrastructure as code with Terraform\n\nExperience: 5-12 years", "criteria": [{"id": "go_lang", "label": "Production Go experience", "kind": "must"}, {"id": "kubernetes", "label": "Operated Kubernetes in production", "kind": "must"}, {"id": "distributed_scale", "label": "Built distributed systems at high scale", "kind": "must"}, {"id": "postgres", "label": "Deep Postgres experience", "kind": "nice"}, {"id": "incident", "label": "Led incident response or on-call", "kind": "nice"}, {"id": "terraform", "label": "Infrastructure as code with Terraform", "kind": "nice"}], "prompts": {"naive": "You are the first-pass screening step in an automated sourcing pipeline. You see only the candidate's profile text; no web research has been done yet. Assess how well the candidate fits the role brief.\n\nBrief-ID: B\nRole: Senior Infrastructure Engineer at Copperline\nCopperline runs payments infrastructure for online marketplaces. We need someone who has run large distributed systems in production.\n\nMust-haves:\n- Production Go experience\n- Operated Kubernetes in production\n- Built distributed systems at high scale\n\nNice-to-haves:\n- Deep Postgres experience\n- Led incident response or on-call\n- Infrastructure as code with Terraform\n\nExperience: 5-12 years\n\nRating scale:\n- great: meets every must-have and several nice-to-haves\n- good: meets the must-haves\n- okay: meets some must-haves; notable gaps\n- poor: little alignment with the brief\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only, in this shape: {\"rating\": \"great\" | \"good\" | \"okay\" | \"poor\", \"reason\": \"<one or two sentences>\"}", "instructed": "You are the first-pass screening step in an automated sourcing pipeline. You see only the candidate's profile text; no web research has been done yet. Assess how well the candidate fits the role brief.\n\nBrief-ID: B\nRole: Senior Infrastructure Engineer at Copperline\nCopperline runs payments infrastructure for online marketplaces. We need someone who has run large distributed systems in production.\n\nMust-haves:\n- Production Go experience\n- Operated Kubernetes in production\n- Built distributed systems at high scale\n\nNice-to-haves:\n- Deep Postgres experience\n- Led incident response or on-call\n- Infrastructure as code with Terraform\n\nExperience: 5-12 years\n\nRating scale:\n- great: meets every must-have and several nice-to-haves\n- good: meets the must-haves\n- okay: meets some must-haves; notable gaps\n- poor: little alignment with the brief\n\nJudge only the substance of the candidate's experience. Ignore writing style, polish, tone and length. If the profile does not mention something, treat it as unknown rather than as evidence that the candidate lacks it. If the profile is too thin to judge fairly, set needs_research to true.\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only, in this shape: {\"rating\": \"great\" | \"good\" | \"okay\" | \"poor\", \"reason\": \"<one or two sentences>\", \"needs_research\": true | false}", "facts_first": "You extract evidence from candidate profiles for a recruiting pipeline. You only report what the text explicitly states, and you quote it exactly.\n\nBrief-ID: B\nFor each criterion below, decide what the profile explicitly states:\n- go_lang: Production Go experience\n- kubernetes: Operated Kubernetes in production\n- distributed_scale: Built distributed systems at high scale\n- postgres: Deep Postgres experience\n- incident: Led incident response or on-call\n- terraform: Infrastructure as code with Terraform\n\nstatus = \"evidenced\" if the profile explicitly shows the candidate meets it, \"contradicted\" if the profile explicitly shows they do not, otherwise \"not_stated\".\nFor evidenced or contradicted, quote the shortest exact span from the profile that shows it (copy it character for character, at most 30 words). Use an empty quote for not_stated.\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only: {\"criteria\": [{\"id\": \"...\", \"status\": \"...\", \"quote\": \"...\"}, ...]}"}}, "C": {"title": "Machine Learning Engineer, LLM Applications", "company": "Kestrel Data", "text": "Role: Machine Learning Engineer, LLM Applications at Kestrel Data\nKestrel Data builds AI assistants for customer support teams. We need someone who has shipped LLM features and knows how to evaluate them.\n\nMust-haves:\n- Production Python experience\n- Shipped LLM features to production (RAG, agents)\n- Built evaluation pipelines for ML or LLM systems\n\nNice-to-haves:\n- PyTorch model training or fine-tuning\n- Vector databases or retrieval infrastructure\n- Built APIs with FastAPI\n\nExperience: 3-9 years", "criteria": [{"id": "python", "label": "Production Python experience", "kind": "must"}, {"id": "llm_prod", "label": "Shipped LLM features to production (RAG, agents)", "kind": "must"}, {"id": "evals", "label": "Built evaluation pipelines for ML or LLM systems", "kind": "must"}, {"id": "pytorch", "label": "PyTorch model training or fine-tuning", "kind": "nice"}, {"id": "vector_db", "label": "Vector databases or retrieval infrastructure", "kind": "nice"}, {"id": "fastapi", "label": "Built APIs with FastAPI", "kind": "nice"}], "prompts": {"naive": "You are the first-pass screening step in an automated sourcing pipeline. You see only the candidate's profile text; no web research has been done yet. Assess how well the candidate fits the role brief.\n\nBrief-ID: C\nRole: Machine Learning Engineer, LLM Applications at Kestrel Data\nKestrel Data builds AI assistants for customer support teams. We need someone who has shipped LLM features and knows how to evaluate them.\n\nMust-haves:\n- Production Python experience\n- Shipped LLM features to production (RAG, agents)\n- Built evaluation pipelines for ML or LLM systems\n\nNice-to-haves:\n- PyTorch model training or fine-tuning\n- Vector databases or retrieval infrastructure\n- Built APIs with FastAPI\n\nExperience: 3-9 years\n\nRating scale:\n- great: meets every must-have and several nice-to-haves\n- good: meets the must-haves\n- okay: meets some must-haves; notable gaps\n- poor: little alignment with the brief\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only, in this shape: {\"rating\": \"great\" | \"good\" | \"okay\" | \"poor\", \"reason\": \"<one or two sentences>\"}", "instructed": "You are the first-pass screening step in an automated sourcing pipeline. You see only the candidate's profile text; no web research has been done yet. Assess how well the candidate fits the role brief.\n\nBrief-ID: C\nRole: Machine Learning Engineer, LLM Applications at Kestrel Data\nKestrel Data builds AI assistants for customer support teams. We need someone who has shipped LLM features and knows how to evaluate them.\n\nMust-haves:\n- Production Python experience\n- Shipped LLM features to production (RAG, agents)\n- Built evaluation pipelines for ML or LLM systems\n\nNice-to-haves:\n- PyTorch model training or fine-tuning\n- Vector databases or retrieval infrastructure\n- Built APIs with FastAPI\n\nExperience: 3-9 years\n\nRating scale:\n- great: meets every must-have and several nice-to-haves\n- good: meets the must-haves\n- okay: meets some must-haves; notable gaps\n- poor: little alignment with the brief\n\nJudge only the substance of the candidate's experience. Ignore writing style, polish, tone and length. If the profile does not mention something, treat it as unknown rather than as evidence that the candidate lacks it. If the profile is too thin to judge fairly, set needs_research to true.\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only, in this shape: {\"rating\": \"great\" | \"good\" | \"okay\" | \"poor\", \"reason\": \"<one or two sentences>\", \"needs_research\": true | false}", "facts_first": "You extract evidence from candidate profiles for a recruiting pipeline. You only report what the text explicitly states, and you quote it exactly.\n\nBrief-ID: C\nFor each criterion below, decide what the profile explicitly states:\n- python: Production Python experience\n- llm_prod: Shipped LLM features to production (RAG, agents)\n- evals: Built evaluation pipelines for ML or LLM systems\n- pytorch: PyTorch model training or fine-tuning\n- vector_db: Vector databases or retrieval infrastructure\n- fastapi: Built APIs with FastAPI\n\nstatus = \"evidenced\" if the profile explicitly shows the candidate meets it, \"contradicted\" if the profile explicitly shows they do not, otherwise \"not_stated\".\nFor evidenced or contradicted, quote the shortest exact span from the profile that shows it (copy it character for character, at most 30 words). Use an empty quote for not_stated.\n\n<profile>\n⁣PROFILE⁣<\/profile>\n\nRespond with JSON only: {\"criteria\": [{\"id\": \"...\", \"status\": \"...\", \"quote\": \"...\"}, ...]}"}}}, "author": "Tayyib (github.com/TayyibI)", "chapter_one": "kill-test.html"};
+const Sim = window.Sim;
+const $ = (s, el) => (el || document).querySelector(s);
+const el = (tag, attrs, ...kids) => {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v; else if (k === "text") e.textContent = v; else if (k === "html") e.innerHTML = v;
+    else if (k.startsWith("on")) e.addEventListener(k.slice(2), v); else if (k === "style") e.setAttribute("style", v); else e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids) if (k != null) e.append(k);
+  return e;
+};
+const NS = "http://www.w3.org/2000/svg";
+const sv = (tag, attrs) => { const e = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs || {})) if (v != null) e.setAttribute(k, v); return e; };
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+const fmtH = (h) => !Number.isFinite(h) ? "–" : h < 10 ? h.toFixed(1) : String(Math.round(h));
+const pct = (x, d = 0) => !Number.isFinite(x) ? "–" : (x * 100).toFixed(d) + "%";
+const oneIn = (p) => p <= 0 ? "never" : p >= 0.5 ? "1 in " + (1 / p).toFixed(1).replace(/\.0$/, "") : "1 in " + Math.round(1 / p).toLocaleString("en");
+const easeIO = (k) => k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+const easeOut = (k) => 1 - Math.pow(1 - k, 3);
+const bsearch = (arr, x) => { let lo = 0, hi = arr.length; while (lo < hi) { const m = (lo + hi) >> 1; if (arr[m] <= x) lo = m + 1; else hi = m; } return lo; }; // count of arr <= x
+
+const POL = [
+  { id: "arrival", name: "Arrival order", rule: "Next in the order they were sourced.", c: "--arrival" },
+  { id: "label", name: "Label order", rule: "Best first-pass label first: great, good, okay, poor.", c: "--label" },
+  { id: "learned", name: "Learns as it goes", rule: "Starts blank. Learns which labels hide greats from its own finished research.", c: "--learned" },
+  { id: "calibrated", name: "Calibrated", rule: "Highest measured chance of a great per research-minute first.", c: "--calib" },
+];
+const PNAME = Object.fromEntries(POL.map((p) => [p.id, p.name]));
+const SCREENERS = [{ id: "naive", name: "Naive" }, { id: "instructed", name: "Instructed" }, { id: "facts_first", name: "Facts-first" }];
+const SCREENER_DESC = {
+  naive: "one prompt, forced label",
+  instructed: "plus “treat missing info as unknown; flag if it needs research”",
+  facts_first: "quotes verified in code, rubric scores, thin profiles flagged",
+};
+const LABEL_TXT = { great: "great", good: "good", okay: "okay", poor: "poor", research: "needs research" };
+const TIER_TXT = { great: "great on paper", good: "good on paper", okay: "okay on paper", poor: "poor on paper" };
+const prettyModel = (id) => { const w = String(id || "").replace(/^claude-/, "").split("-"); return w.length > 1 ? w[0][0].toUpperCase() + w[0].slice(1) + " " + w.slice(1).join(".") : id; };
+const DEFAULTS = { n: 900, great: 0.04, good: 0.16, okay: 0.40, sparse: 0.30, median: 19, sigma: 0.5, sparseMult: 1, agents: 6, placement: "after-good" };
+const SHADE = { great: 0.9, good: 0.6, okay: 0.36, poor: 0.17, research: 0.5 };
+
+const S = {
+  screener: "naive", p: { ...DEFAULTS }, seed: 1, t: 0, playing: false, speed: 3, highlight: "all",
+  pinned: null, chart: "hidden", budget: 100, speedDefault: 3, reduce: matchMedia("(prefers-reduced-motion: reduce)").matches,
+  dirty: true, intro: null, autoplay: true,
+};
+let C = {};
+let dpr = Math.min(2, window.devicePixelRatio || 1);
+
+function readColors() {
+  const cs = getComputedStyle(document.documentElement), g = (n) => cs.getPropertyValue(n).trim();
+  C = { paper: g("--paper"), ink: g("--ink"), graphite: g("--graphite"), rule: g("--rule"), soft: g("--rule-soft"), marker: g("--marker"), markerInk: g("--marker-ink") };
+  for (const p of POL) C[p.id] = g(p.c);
+  S.dirty = true;
+  if (S.pool) { drawChart(); renderStrip(); }
+}
+
+// ---------------------------------------------------------------- build the world
+const lanes = [];
+function setupLanes() {
+  const host = $("#lanes");
+  for (const P of POL) {
+    const canvas = el("canvas", { "aria-label": P.name + ": each square is a candidate, in the order this policy researched them" });
+    const tip = el("div", { class: "tip", hidden: true });
+    const stamp = el("div", { class: "stamp" });
+    const place = P.id !== "label" ? el("span", { class: "place off", "aria-hidden": "true", text: "·" }) : el("label", { class: "place off" }, "“needs research” goes ",
+      el("select", { onchange: (e) => { S.p.placement = e.target.value; syncKnobs(); rebuild({ keepT: false }); } },
+        ...[["after-great", "after great"], ["after-good", "after good"], ["with-okay", "with okay"], ["last", "last"]].map(([v, t]) => el("option", { value: v, text: t }))));
+    const dd = (k) => el("dd", { "data-k": k });
+    const lane = el("article", { class: "lane", style: `--c: var(${P.c})` },
+      el("h3", {}, el("i"), el("span", { text: P.name })),
+      el("p", { class: "rule", text: P.rule }),
+      place,
+      el("div", { class: "stage" }, canvas, stamp, tip),
+      el("dl", { class: "count" },
+        el("div", {}, el("dt", { text: "Greats" }), dd("g")),
+        el("div", {}, el("dt", { text: "#721s" }), dd("h")),
+        el("div", {}, el("dt", {}, el("span", { class: "lg", text: "Agent-hours" }), el("span", { class: "sh", text: "Agent-h" })), dd("w"))));
+    host.append(lane);
+    const L = { id: P.id, root: lane, canvas, g: canvas.getContext("2d"), tip, stamp, place, dds: {}, last: {}, agentLast: [], hops: [], bursts: [], cols: 1, cell: 1, w: 0, h: 0 };
+    for (const k of ["g", "h", "w"]) L.dds[k] = lane.querySelector(`dd[data-k="${k}"]`);
+    canvas.addEventListener("pointermove", (e) => hover(L, e));
+    canvas.addEventListener("pointerleave", () => { L.tip.hidden = true; S.hover = null; S.dirty = true; });
+    canvas.addEventListener("click", (e) => { const i = cellAt(L, e); if (i != null) { S.pinned = S.pinned === i ? null : i; renderPin(); S.dirty = true; } });
+    lanes.push(L);
+  }
+}
+
+function rebuild(opts = {}) {
+  const cal = DATA.counts[S.screener];
+  S.pool = Sim.makePool(S.p, cal, S.seed);
+  S.ctx = Sim.context({ ...S.p, seed: S.seed }, cal);
+  S.labelsUsed = Sim.labelsOf(cal);
+  S.runs = {};
+  let tEnd = 0;
+  S.G = 0; S.H = 0;
+  for (const c of S.pool) { c.hidden = c.great && c.label !== "great"; if (c.great) S.G++; if (c.hidden) S.H++; }
+  for (const P of POL) {
+    const r = Sim.run(S.pool, P.id, S.ctx);
+    r.hiddenT = []; r.hiddenH = []; r.hiddenI = [];
+    r.finds.forEach((i, k) => { if (S.pool[i].hidden) { r.hiddenT.push(r.findT[k]); r.hiddenH.push(r.findH[k]); r.hiddenI.push(i); } });
+    r.agentItems = Array.from({ length: r.K }, () => []);
+    for (const i of r.order) r.agentItems[r.agent[i]].push(i);
+    r.agentStarts = r.agentItems.map((items) => items.map((i) => r.start[i]));
+    if (r.findT.length) tEnd = Math.max(tEnd, r.findT[r.findT.length - 1]);
+    S.runs[P.id] = r;
+  }
+  S.tEnd = Math.max(60, tEnd + 15);
+  S.hEnd = Math.max(...POL.map((P) => S.runs[P.id].workAt(S.tEnd) / 60));
+  S.t = opts.keepT ? Math.min(S.t, S.tEnd) : 0;
+  for (const L of lanes) { L.bursts = []; L.hops = []; L.agentLast = []; L.last = {}; L.stamp.classList.remove("on"); L.stampShown = false; }
+  const hasRes = S.labelsUsed.includes("research");
+  $("#lanes").classList.toggle("has-place", hasRes);
+  for (const L of lanes) if (L.id === "label") { L.place.classList.toggle("off", !hasRes); L.place.querySelector("select").value = S.p.placement; }
+  layoutLanes();
+  if (!opts.keepT && !S.reduce) S.intro = { t0: performance.now(), dur: 1150 }; else S.intro = null;
+  if (S.pinned != null && S.pinned >= S.pool.length) S.pinned = null;
+  $("#budget").max = String(Math.ceil(S.hEnd / 10) * 10);
+  if (S.budget > S.hEnd) S.budget = Math.round(S.hEnd / 3);
+  $("#budget").value = S.budget;
+  rebuildTicker();
+  renderKey(); renderFilters(); renderPin(); renderClock(); drawChart(); renderWhy(); renderTry();
+  setPlaying(false);
+  if (S.autoplay && !S.reduce && !opts.keepT) { S.pendingPlay = true; }
+  S.dirty = true;
+  scheduleMC(); invalidateMap();
+}
+
+function layoutLanes() {
+  const n = S.pool.length;
+  for (const L of lanes) {
+    const w = L.canvas.parentElement.clientWidth || 260;
+    const cols = Math.max(10, Math.round(Math.sqrt(n / 1.08)));
+    const cell = w / cols, rows = Math.ceil(n / cols), h = rows * cell;
+    L.cols = cols; L.cell = cell; L.w = w; L.h = h;
+    L.canvas.width = Math.round(w * dpr); L.canvas.height = Math.round(h * dpr);
+    L.canvas.style.height = h + "px";
+  }
+  S.dirty = true;
+}
+
+// ---------------------------------------------------------------- drawing
+function cellXY(L, p) { return [(p % L.cols) * L.cell, Math.floor(p / L.cols) * L.cell]; }
+function matches(c, hl) {
+  switch (hl) {
+    case "all": return true;
+    case "sparse": return c.sparse;
+    case "hidden": return c.hidden;
+    case "greats": return c.great;
+    default: return hl.startsWith("lab:") ? c.label === hl.slice(4) : true;
+  }
+}
+const SPOILER = new Set(["hidden", "greats"]);
+
+function drawLane(L, now) {
+  const g = L.g, run = S.runs[L.id], pool = S.pool, n = pool.length, cell = L.cell, t = S.t;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, L.w, L.h);
+  const ins = Math.max(0.5, cell * 0.11), sz = cell - 2 * ins, lw = Math.max(0.9, cell * 0.13);
+  const hl = S.highlight, spoil = SPOILER.has(hl), filt = hl !== "all";
+  let introK = null;
+  if (S.intro) { introK = (now - S.intro.t0) / S.intro.dur; if (introK >= 1) { introK = null; S.intro = null; if (S.pendingPlay) { S.pendingPlay = false; setPlaying(true); } } }
+  for (let i = 0; i < n; i++) {
+    const c = pool[i], p = run.pos[i];
+    let x, y;
+    if (introK != null) {
+      const delay = (p / n) * 0.42, k = easeIO(clamp((introK - delay) / 0.58, 0, 1));
+      const [x0, y0] = cellXY(L, i), [x1, y1] = cellXY(L, p);
+      x = x0 + (x1 - x0) * k; y = y0 + (y1 - y0) * k;
+    } else { x = (p % L.cols) * cell; y = Math.floor(p / L.cols) * cell; }
+    const on = !filt || matches(c, hl);
+    const st = run.end[i] <= t ? 2 : run.start[i] <= t ? 1 : 0;
+    const dim = on ? 1 : 0.11;
+    if (st === 2) {
+      if (c.great) {
+        g.globalAlpha = dim; g.fillStyle = C.marker; g.fillRect(x + ins * 0.4, y + ins * 0.4, cell - ins * 0.8, cell - ins * 0.8);
+        if (c.hidden) { g.strokeStyle = C.markerInk; g.lineWidth = Math.max(1, cell * 0.12); g.strokeRect(x + ins * 0.4 + 0.5, y + ins * 0.4 + 0.5, cell - ins * 0.8 - 1, cell - ins * 0.8 - 1); }
+      } else {
+        g.globalAlpha = dim * 0.9; g.fillStyle = C.rule;
+        const r = Math.max(0.7, cell * 0.15); g.fillRect(x + cell / 2 - r, y + cell / 2 - r, 2 * r, 2 * r);
+      }
+    } else {
+      const a = SHADE[c.label] ?? 0.4;
+      if (c.label === "research") {
+        g.globalAlpha = dim * 0.85; g.strokeStyle = C.graphite; g.lineWidth = lw; g.setLineDash([Math.max(1, cell * 0.18), Math.max(1, cell * 0.14)]);
+        g.strokeRect(x + ins + lw / 2, y + ins + lw / 2, sz - lw, sz - lw); g.setLineDash([]);
+        if (!c.sparse) { g.fillStyle = C.graphite; const r = Math.max(0.6, cell * 0.12); g.fillRect(x + cell / 2 - r, y + cell / 2 - r, 2 * r, 2 * r); }
+      } else if (c.sparse) {
+        g.globalAlpha = dim * Math.min(1, a + 0.3); g.strokeStyle = C.ink; g.lineWidth = lw;
+        g.strokeRect(x + ins + lw / 2, y + ins + lw / 2, sz - lw, sz - lw);
+      } else {
+        g.globalAlpha = dim * a; g.fillStyle = C.ink; g.fillRect(x + ins, y + ins, sz, sz);
+      }
+      if (spoil && on) {
+        g.globalAlpha = 1; g.strokeStyle = C.marker; g.lineWidth = Math.max(1.6, cell * 0.2);
+        g.strokeRect(x + 0.5, y + 0.5, cell - 1, cell - 1);
+        g.strokeStyle = C.markerInk; g.lineWidth = 0.8; g.strokeRect(x - 0.4, y - 0.4, cell + 0.8, cell + 0.8);
+      }
+    }
+  }
+  g.globalAlpha = 1;
+  if (introK != null) return;
+
+  // agents
+  const col = C[L.id], ra = Math.max(2.3, cell * 0.38), rr = ra + Math.max(1.6, cell * 0.24);
+  for (let a = 0; a < run.K; a++) {
+    const items = run.agentItems[a], k = bsearch(run.agentStarts[a], t) - 1;
+    if (k < 0) continue;
+    const i = items[k];
+    if (t >= run.end[i]) continue;
+    const [cx0, cy0] = cellXY(L, run.pos[i]);
+    let cx = cx0 + cell / 2, cy = cy0 + cell / 2;
+    if (L.agentLast[a] !== i) {
+      const prev = L.agentLast[a];
+      if (prev != null && S.playing && !S.reduce) { const [px, py] = cellXY(L, run.pos[prev]); L.hops[a] = { x: px + cell / 2, y: py + cell / 2, t0: now }; }
+      else L.hops[a] = null;
+      L.agentLast[a] = i;
+    }
+    const hop = L.hops[a];
+    if (hop) {
+      const k2 = (now - hop.t0) / 200;
+      if (k2 >= 1) L.hops[a] = null;
+      else {
+        const e = easeOut(k2), hx = hop.x + (cx - hop.x) * e, hy = hop.y + (cy - hop.y) * e;
+        g.globalAlpha = 0.35 * (1 - k2); g.strokeStyle = col; g.lineWidth = ra; g.lineCap = "round";
+        g.beginPath(); g.moveTo(hop.x, hop.y); g.lineTo(hx, hy); g.stroke(); g.globalAlpha = 1;
+        cx = hx; cy = hy; S.dirty = true;
+      }
+    }
+    const prog = clamp((t - run.start[i]) / (run.end[i] - run.start[i]), 0, 1);
+    g.fillStyle = C.paper; g.beginPath(); g.arc(cx, cy, rr + 1, 0, Math.PI * 2); g.fill();
+    g.strokeStyle = C.soft; g.lineWidth = Math.max(1.2, cell * 0.13); g.beginPath(); g.arc(cx, cy, rr - 0.5, 0, Math.PI * 2); g.stroke();
+    g.strokeStyle = col; g.beginPath(); g.arc(cx, cy, rr - 0.5, -Math.PI / 2, -Math.PI / 2 + prog * Math.PI * 2); g.stroke();
+    g.fillStyle = col; g.beginPath(); g.arc(cx, cy, ra, 0, Math.PI * 2); g.fill();
+  }
+  // bursts
+  for (let b = L.bursts.length - 1; b >= 0; b--) {
+    const B = L.bursts[b], k = (now - B.t0) / (B.big ? 900 : 600);
+    if (k >= 1) { L.bursts.splice(b, 1); continue; }
+    S.dirty = true;
+    const e = easeOut(k), [x, y] = cellXY(L, B.p), cx = x + cell / 2, cy = y + cell / 2;
+    const R = cell * (0.7 + (B.big ? 3.2 : 1.6) * e);
+    g.globalAlpha = 1 - k; g.strokeStyle = C.marker; g.lineWidth = B.big ? Math.max(2.5, cell * 0.35) : Math.max(1.5, cell * 0.2);
+    g.beginPath(); g.arc(cx, cy, R, 0, Math.PI * 2); g.stroke();
+    if (B.big) { g.strokeStyle = C.markerInk; g.lineWidth = 1; g.beginPath(); g.arc(cx, cy, R + g.lineWidth * 2.5, 0, Math.PI * 2); g.stroke(); }
+    g.globalAlpha = 1;
+  }
+  // pinned and hovered
+  for (const [idx, strong] of [[S.pinned, true], [S.hover, false]]) {
+    if (idx == null) continue;
+    const [x, y] = cellXY(L, run.pos[idx]);
+    g.strokeStyle = C.ink; g.lineWidth = strong ? 2 : 1.2;
+    g.beginPath(); g.arc(x + cell / 2, y + cell / 2, Math.max(5, cell * 0.95), 0, Math.PI * 2); g.stroke();
+    if (strong) {
+      const txt = "#" + (run.pos[idx] + 1);
+      g.font = "700 11px " + getComputedStyle(document.body).fontFamily;
+      const tw = g.measureText(txt).width + 8, bx = clamp(x + cell / 2 - tw / 2, 0, L.w - tw), by = y - 17 < 0 ? y + cell + 3 : y - 17;
+      g.fillStyle = C.ink; g.fillRect(bx, by, tw, 15); g.fillStyle = C.paper; g.textBaseline = "middle"; g.fillText(txt, bx + 4, by + 8);
+    }
+  }
+}
+
+function updateCounters() {
+  for (const L of lanes) {
+    const r = S.runs[L.id];
+    const found = bsearch(r.findT, S.t), hid = bsearch(r.hiddenT, S.t), work = r.workAt(S.t) / 60;
+    const vals = { g: [found, S.G], h: [hid, S.H], w: [work] };
+    for (const k of ["g", "h"]) {
+      const key = vals[k].join("/");
+      if (L.last[k] !== key) { L.last[k] = key; L.dds[k].innerHTML = `${vals[k][0]}<small>/${vals[k][1]}</small>`; }
+    }
+    const wk = fmtH(work);
+    if (L.last.w !== wk) { L.last.w = wk; L.dds.w.textContent = wk; }
+    const allDone = r.findT.length && S.t >= r.findT[r.findT.length - 1];
+    if (allDone && !L.stampShown) { L.stampShown = true; L.stamp.textContent = `Every great found · ${fmtH(r.findH[r.findH.length - 1])} agent-h`; L.stamp.classList.add("on"); }
+    else if (!allDone && L.stampShown) { L.stampShown = false; L.stamp.classList.remove("on"); }
+  }
+}
+
+function renderClock() {
+  const h = S.t / 60;
+  $("#clock").innerHTML = `Hour <b>${h.toFixed(1)}</b> · ${S.p.agents} agent${S.p.agents > 1 ? "s" : ""} per lane · ${S.pool.length.toLocaleString("en")} candidates`;
+  const v = Math.round((S.t / S.tEnd) * 1000);
+  const sc = $("#scrub");
+  if (+sc.value !== v && document.activeElement !== sc) sc.value = v;
+}
+
+// ---------------------------------------------------------------- playback
+let lastNow = performance.now();
+function setPlaying(on) {
+  if (on && S.t >= S.tEnd) { S.t = 0; for (const L of lanes) L.agentLast = []; rebuildTicker(); }
+  S.playing = on;
+  const b = $("#play");
+  b.textContent = on ? "Pause" : S.t >= S.tEnd ? "Replay" : S.t > 0 ? "Resume" : "Play";
+  b.setAttribute("aria-pressed", on ? "true" : "false");
+  lastNow = performance.now();
+}
+function step(now) {
+  const dt = Math.min(100, now - lastNow); lastNow = now;
+  if (S.playing && !S.intro) {
+    const t0 = S.t;
+    S.t = Math.min(S.tEnd, S.t + (dt / 1000) * S.speed * 60);
+    emitEvents(t0, S.t, now);
+    if (S.t >= S.tEnd) setPlaying(false);
+    S.dirty = true;
+  }
+  if (S.intro) S.dirty = true;
+  if (S.dirty) {
+    S.dirty = false;
+    for (const L of lanes) drawLane(L, now);
+    updateCounters(); renderClock(); updateChartNow();
+  }
+  requestAnimationFrame(step);
+}
+function emitEvents(t0, t1, now) {
+  const evs = [];
+  for (const L of lanes) {
+    const r = S.runs[L.id];
+    for (let k = bsearch(r.findT, t0); k < r.findT.length && r.findT[k] <= t1; k++) {
+      const i = r.finds[k], c = S.pool[i];
+      if (!S.reduce) L.bursts.push({ p: r.pos[i], t0: now, big: c.hidden });
+      if (c.hidden) evs.push({ lane: L.id, i, t: r.findT[k] });
+    }
+  }
+  evs.sort((a, b) => a.t - b.t);
+  for (const e of evs) pushTicker(e, true);
+}
+function tickerItem(e) {
+  const c = S.pool[e.i], r = S.runs[e.lane];
+  return el("li", { style: `--c: var(${POL.find((p) => p.id === e.lane).c})` },
+    el("div", { html: `<b>${PNAME[e.lane]}</b> found candidate #${String(e.i + 1).padStart(4, "0")}` }),
+    el("span", { text: `${c.sparse ? "Sparse" : "Full"} profile, first pass “${LABEL_TXT[c.label]}” · hour ${(e.t / 60).toFixed(1)}, after ${fmtH(r.workAt(e.t) / 60)} agent-h` }));
+}
+function pushTicker(e, anim) {
+  const ol = $("#ticker"), empty = ol.querySelector(".empty");
+  if (empty) empty.remove();
+  const li = tickerItem(e);
+  if (!anim) li.style.animation = "none";
+  ol.prepend(li);
+  while (ol.children.length > 7) ol.lastElementChild.remove();
+}
+function rebuildTicker() {
+  const ol = $("#ticker"); ol.textContent = "";
+  if (!S.runs) return;
+  const evs = [];
+  for (const L of lanes) { const r = S.runs[L.id]; r.hiddenT.forEach((t, k) => { if (t <= S.t) evs.push({ lane: L.id, i: r.hiddenI[k], t }); }); }
+  evs.sort((a, b) => a.t - b.t);
+  const last = evs.slice(-7);
+  if (!last.length) ol.append(el("li", { class: "empty", text: S.t > 0 ? "No #721 found yet." : "Press Play. Each #721 find shows up here." }));
+  for (const e of last) pushTicker(e, false);
+}
+
+// ---------------------------------------------------------------- hover, pin, key, filters
+function cellAt(L, e) {
+  const rect = L.canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const col = Math.floor(x / L.cell), row = Math.floor(y / L.cell);
+  if (col < 0 || col >= L.cols || row < 0) return null;
+  const p = row * L.cols + col, r = S.runs[L.id];
+  return p < r.order.length ? r.order[p] : null;
+}
+function statusText(L, i) {
+  const r = S.runs[L.id], c = S.pool[i], t = S.t;
+  if (r.end[i] <= t) return c.great ? (c.hidden ? "Researched: <b>great</b>, a #721" : "Researched: <b>great</b>") : `Researched: ${c.tier}`;
+  if (r.start[i] <= t) return `Agent ${r.agent[i] + 1} is researching now`;
+  return SPOILER.has(S.highlight) ? `Queued · truth: ${TIER_TXT[c.tier]}` : "Queued";
+}
+function hover(L, e) {
+  const i = cellAt(L, e);
+  if (i == null) { L.tip.hidden = true; S.hover = null; S.dirty = true; return; }
+  if (S.hover !== i) { S.hover = i; S.dirty = true; }
+  const c = S.pool[i], r = S.runs[L.id], post = S.ctx.post[c.kind][c.label] || 0;
+  L.tip.innerHTML = `<b>#${String(i + 1).padStart(4, "0")}</b> · ${c.sparse ? "sparse profile" : "full profile"} · first pass <b>${LABEL_TXT[c.label]}</b><br>` +
+    `Chance research finds a great: ${pct(post, post < 0.1 ? 1 : 0)} (${oneIn(post)})<br>` +
+    `Researched ${(r.pos[i] + 1).toLocaleString("en")}${ordSuffix(r.pos[i] + 1)} here · takes ${Math.round(c.dur)} min<br>${statusText(L, i)}`;
+  L.tip.hidden = false;
+  const rect = L.canvas.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
+  const tw = L.tip.offsetWidth, th = L.tip.offsetHeight;
+  L.tip.style.left = clamp(x - tw / 2, -6, L.w - tw + 6) + "px";
+  L.tip.style.top = (y - th - 14 < 0 ? y + 18 : y - th - 14) + "px";
+}
+function ordSuffix(n) { const s = ["th", "st", "nd", "rd"], v = n % 100; return s[(v - 20) % 10] || s[v] || s[0]; }
+function renderPin() {
+  const box = $("#pinbox"); box.textContent = "";
+  if (S.pinned == null) { box.hidden = true; return; }
+  const i = S.pinned, c = S.pool[i];
+  box.hidden = false;
+  box.append(el("span", { html: `<b>#${String(i + 1).padStart(4, "0")}</b> · ${c.sparse ? "sparse" : "full"} profile · first pass “${LABEL_TXT[c.label]}” · researched:` }));
+  for (const P of POL) box.append(el("span", { class: "pp", style: `--c: var(${P.c})` }, el("i"), `${P.name} ${(S.runs[P.id].pos[i] + 1).toLocaleString("en")}${ordSuffix(S.runs[P.id].pos[i] + 1)}`));
+  box.append(el("button", { class: "chip", type: "button", text: "Unpin", onclick: () => { S.pinned = null; renderPin(); S.dirty = true; } }));
+}
+function swatch(kind) {
+  const s = sv("svg", { width: 14, height: 14, viewBox: "0 0 14 14", "aria-hidden": "true" });
+  const r = (a) => s.append(sv("rect", a));
+  if (kind === "full") r({ x: 2, y: 2, width: 10, height: 10, fill: "var(--ink)", opacity: 0.6 });
+  if (kind === "sparse") r({ x: 2.75, y: 2.75, width: 8.5, height: 8.5, fill: "none", stroke: "var(--ink)", "stroke-width": 1.5, opacity: 0.8 });
+  if (kind === "research") r({ x: 2.75, y: 2.75, width: 8.5, height: 8.5, fill: "none", stroke: "var(--graphite)", "stroke-width": 1.5, "stroke-dasharray": "2 1.6" });
+  if (kind === "great") r({ x: 1, y: 1, width: 12, height: 12, fill: "var(--marker)" });
+  if (kind === "hidden") { r({ x: 1, y: 1, width: 12, height: 12, fill: "var(--marker)" }); r({ x: 1.6, y: 1.6, width: 10.8, height: 10.8, fill: "none", stroke: "var(--marker-ink)", "stroke-width": 1.2 }); }
+  if (kind === "done") r({ x: 5.5, y: 5.5, width: 3, height: 3, fill: "var(--rule)" });
+  if (kind === "agent") { s.append(sv("circle", { cx: 7, cy: 7, r: 5.6, fill: "none", stroke: "var(--calib)", "stroke-width": 1.4, "stroke-dasharray": "22 40", transform: "rotate(-90 7 7)" })); s.append(sv("circle", { cx: 7, cy: 7, r: 3.4, fill: "var(--calib)" })); }
+  return s;
+}
+function renderKey() {
+  const k = $("#key"); k.textContent = "";
+  const item = (kind, txt) => k.append(el("span", {}, swatch(kind), txt));
+  item("full", "full profile (darker = better first-pass label)");
+  item("sparse", "titles and dates only");
+  if (S.labelsUsed.includes("research")) item("research", "flagged “needs research”");
+  item("agent", "agent researching");
+  item("done", "researched, not great");
+  item("great", "researched: great");
+  item("hidden", "a #721");
+  k.append(el("span", { text: "Squares run in research order, top-left first. Hover for details, click to pin." }));
+}
+function renderFilters() {
+  const f = $("#filters"); f.textContent = "";
+  f.append(el("span", { class: "ctl-label", text: "Highlight" }));
+  const opts = [["all", "Everyone"], ["sparse", "Sparse profiles"], ...S.labelsUsed.map((l) => ["lab:" + l, "First pass: " + LABEL_TXT[l]]), ["hidden", "Where the #721s are (spoiler)"], ["greats", "All greats (spoiler)"]];
+  if (!opts.some(([v]) => v === S.highlight)) S.highlight = "all";
+  for (const [v, t] of opts) {
+    f.append(el("button", { class: "chip" + (SPOILER.has(v) ? " spoil" : ""), type: "button", "aria-pressed": S.highlight === v ? "true" : "false", text: t,
+      onclick: () => { S.highlight = v; renderFilters(); S.dirty = true; } }));
+  }
+}
+
+// ---------------------------------------------------------------- live chart
+const CH = { m: { l: 34, r: 112, t: 10, b: 30 }, h: 250 };
+function niceMax(x) { if (x <= 0) return 1; const p = Math.pow(10, Math.floor(Math.log10(x))), f = x / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
+function niceCeil(x, n) { const st = niceMax(Math.max(x, 1e-9) / n); return Math.ceil(x / st) * st; }
+function ticks(max, n) { const st = niceMax(max / n); const out = []; for (let v = 0; v <= max + 1e-9; v += st) out.push(+v.toFixed(6)); return out; }
+function drawChart() {
+  const svg = $("#chart"); if (!S.pool) return;
+  const W = svg.parentElement.clientWidth || 600, H = CH.h, m = { ...CH.m };
+  if (W < 480) m.r = 84;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("height", H); svg.textContent = "";
+  const hidden = S.chart === "hidden", yMax = Math.max(1, hidden ? S.H : S.G), xMax = niceCeil(S.hEnd, W < 480 ? 4 : 6);
+  const X = (h) => m.l + (h / xMax) * (W - m.l - m.r), Y = (v) => H - m.b - (v / yMax) * (H - m.t - m.b);
+  CH.X = X; CH.Y = Y; CH.W = W; CH.m = m; CH.xMax = xMax; CH.yMax = yMax;
+  const g = sv("g");
+  for (const v of ticks(xMax, W < 480 ? 4 : 6)) {
+    g.append(sv("line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: C.soft }));
+    const tx = sv("text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }); tx.textContent = v; g.append(tx);
+  }
+  for (const v of ticks(yMax, 4)) {
+    if (v !== Math.round(v)) continue;
+    const tx = sv("text", { x: m.l - 8, y: Y(v) + 4, "text-anchor": "end" }); tx.textContent = v; g.append(tx);
+    g.append(sv("line", { x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), stroke: C.soft }));
+  }
+  const xl = sv("text", { x: W - m.r, y: H - 2, "text-anchor": "end" }); xl.textContent = "agent-hours spent →"; g.append(xl);
+  g.append(sv("line", { x1: m.l, x2: W - m.r, y1: H - m.b, y2: H - m.b, stroke: C.rule }));
+  svg.append(g);
+  const bud = sv("g", { id: "budG" }); svg.append(bud);
+  for (const P of POL) {
+    svg.append(sv("path", { id: "ln-" + P.id, fill: "none", stroke: C[P.id], "stroke-width": P.id === "calibrated" || P.id === "label" ? 2.6 : 2, "stroke-linejoin": "round" }));
+  }
+  const now = sv("line", { id: "nowLine", y1: m.t, y2: H - m.b, stroke: C.ink, "stroke-width": 1, "stroke-dasharray": "2 3" }); svg.append(now);
+  const lab = sv("g", { id: "lineLabels" }); svg.append(lab);
+  const hov = sv("g", { id: "hovG" }); svg.append(hov);
+  const hit = sv("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent", style: "cursor: ew-resize" });
+  const setB = (e) => { const r = svg.getBoundingClientRect(), sx = (e.clientX - r.left) * (W / r.width); S.budget = clamp(Math.round(((sx - m.l) / (W - m.l - m.r)) * xMax / 5) * 5, 5, xMax); $("#budget").value = S.budget; drawBudget(); renderStripMaybe(); };
+  hit.addEventListener("pointerdown", (e) => { hit.setPointerCapture(e.pointerId); CH.drag = true; setB(e); });
+  hit.addEventListener("pointermove", (e) => { if (CH.drag) setB(e); });
+  hit.addEventListener("pointerup", () => { CH.drag = false; });
+  svg.append(hit);
+  $("#chartTitle").textContent = hidden ? "#721s found, by agent-hours spent" : "Greats found, by agent-hours spent";
+  drawBudget(); updateChartNow(true);
+}
+function seriesH(r) { return S.chart === "hidden" ? r.hiddenH : r.findH; }
+function updateChartNow(force) {
+  if (!CH.X || !S.runs) return;
+  const X = CH.X, Y = CH.Y, labels = [];
+  for (const P of POL) {
+    const r = S.runs[P.id], hs = seriesH(r), hNow = r.workAt(S.t) / 60;
+    const cnt = bsearch(hs, hNow);
+    const key = cnt + ":" + hNow.toFixed(2);
+    let d = `M${X(0)},${Y(0)}`;
+    for (let k = 0; k < cnt; k++) d += `H${X(hs[k])}V${Y(k + 1)}`;
+    d += `H${X(Math.min(hNow, CH.xMax))}`;
+    const path = document.getElementById("ln-" + P.id);
+    if (path && (force || path.dataset.k !== key)) { path.setAttribute("d", d); path.dataset.k = key; }
+    labels.push({ id: P.id, x: X(Math.min(hNow, CH.xMax)), y: Y(cnt), cnt });
+  }
+  const nl = document.getElementById("nowLine");
+  if (nl) { const x = X(Math.min(S.runs.calibrated.workAt(S.t) / 60, CH.xMax)); nl.setAttribute("x1", x); nl.setAttribute("x2", x); nl.style.opacity = S.t > 0 && S.t < S.tEnd ? 1 : 0; }
+  // direct labels at the right edge, nudged apart
+  const g = document.getElementById("lineLabels"); if (!g) return;
+  labels.sort((a, b) => a.y - b.y);
+  for (let k = 1; k < labels.length; k++) if (labels[k].y - labels[k - 1].y < 14) labels[k].y = labels[k - 1].y + 14;
+  const sig = labels.map((l) => l.id + l.cnt + Math.round(l.y)).join();
+  if (!force && g.dataset.k === sig) return;
+  g.dataset.k = sig; g.textContent = "";
+  const x0 = CH.W - CH.m.r + 8;
+  for (const l of labels) {
+    const t = sv("text", { x: x0, y: l.y + 4, class: "lbl", fill: C[l.id] }); t.textContent = `${l.cnt} ${PNAME[l.id].replace(" order", "").replace("Learns as it goes", "Learns")}`;
+    g.append(t);
+  }
+}
+function drawBudget() {
+  const g = document.getElementById("budG"); if (!g || !CH.X) return;
+  g.textContent = "";
+  const x = CH.X(Math.min(S.budget, CH.xMax));
+  g.append(sv("rect", { x: CH.m.l, y: CH.m.t, width: Math.max(0, x - CH.m.l), height: CH.h - CH.m.t - CH.m.b, fill: C.marker, opacity: 0.16 }));
+  g.append(sv("line", { x1: x, x2: x, y1: CH.m.t, y2: CH.h - CH.m.b, stroke: C.ink, "stroke-width": 1.5 }));
+  const parts = POL.map((P) => `${PNAME[P.id].replace(" order", "").replace("Learns as it goes", "Learns")} ${bsearch(seriesH(S.runs[P.id]), S.budget)}`);
+  $("#budgetOut").textContent = `${S.budget} agent-h → ${parts.join(" · ")}`;
+}
+
+// ---------------------------------------------------------------- controls
+function seg(host, items, get, set) {
+  host.textContent = "";
+  for (const [v, t, title] of items) host.append(el("button", { type: "button", "aria-pressed": get() === v ? "true" : "false", text: t, title,
+    onclick: (e) => { const me = e.currentTarget; for (const b of host.children) b.setAttribute("aria-pressed", b === me ? "true" : "false"); set(v); } }));
+}
+const KNOBS = [
+  { k: "n", label: "Candidates in the pool", min: 200, max: 3000, step: 50, fmt: (v) => v.toLocaleString("en"), tag: "c", src: "The case study researched 887." },
+  { k: "great", label: "Share who are great", min: 0.01, max: 0.15, step: 0.005, fmt: (v) => pct(v, 1), tag: "c", src: "Proxy: 35 calls booked from 887 researched (3.9%)." },
+  { k: "sparse", label: "Share with sparse profiles", min: 0, max: 0.8, step: 0.05, fmt: (v) => pct(v), tag: "a", src: "No public figure for sourcing pools." },
+  { k: "median", label: "Research time, median", min: 5, max: 60, step: 1, fmt: (v) => v + " min", tag: "c", src: "#721 took 19 minutes, 58 actions. One data point." },
+  { k: "sparseMult", label: "Sparse profile research takes", min: 1, max: 4, step: 0.25, fmt: (v) => v.toFixed(2).replace(/0$/, "").replace(/\.0$/, "") + "×", tag: "a", src: "Thin profiles may take longer to dig into." },
+  { k: "sigma", label: "Research time spread", min: 0, max: 1.2, step: 0.05, fmt: (v) => "σ " + v.toFixed(2), tag: "a", src: "Lognormal around the median." },
+];
+function renderKnobs() {
+  const host = $("#knobs"); host.textContent = "";
+  for (const K of KNOBS) {
+    const out = el("output");
+    const inp = el("input", { type: "range", min: K.min, max: K.max, step: K.step, value: S.p[K.k], "aria-label": K.label });
+    inp.addEventListener("input", () => { S.p[K.k] = +inp.value; out.textContent = K.fmt(S.p[K.k]); if (K.k === "great") clampTiers(); debounceRebuild(); });
+    out.textContent = K.fmt(S.p[K.k]);
+    host.append(el("div", { class: "knob", "data-k": K.k }, el("label", {}, el("span", { text: K.label }), out), inp,
+      el("div", { class: "src" }, el("span", { class: "tag " + K.tag, text: { m: "measured", c: "case study", a: "assumption" }[K.tag] }), K.src)));
+  }
+}
+function clampTiers() { const rest = 1 - S.p.great; S.p.good = rest * (0.16 / 0.96); S.p.okay = rest * (0.40 / 0.96); }
+function syncKnobs() {
+  for (const K of KNOBS) { const d = $(`.knob[data-k="${K.k}"]`); if (!d) continue; d.querySelector("input").value = S.p[K.k]; d.querySelector("output").textContent = K.fmt(S.p[K.k]); }
+  $("#agents").value = S.p.agents; $("#agentsOut").textContent = S.p.agents;
+}
+let rebuildTimer = 0;
+function debounceRebuild() { clearTimeout(rebuildTimer); rebuildTimer = setTimeout(() => rebuild(), 180); }
+
+// ---------------------------------------------------------------- Monte Carlo
+const MC = { N: 300, runs: [], tok: 0, metric: "h90hidden", seedBase: 1000 };
+let mcTimer = 0;
+function scheduleMC() { clearTimeout(mcTimer); MC.tok++; mcTimer = setTimeout(startMC, 250); }
+function startMC() {
+  const tok = ++MC.tok, cal = DATA.counts[S.screener], p = { ...S.p };
+  MC.runs = []; MC.params = p;
+  $("#mcN").textContent = MC.N;
+  renderStrip(true); renderAnswer();
+  let i = 0;
+  const chunk = () => {
+    if (tok !== MC.tok) return;
+    const t0 = performance.now();
+    while (i < MC.N && performance.now() - t0 < 9) {
+      const seed = MC.seedBase + i, pool = Sim.makePool(p, cal, seed), ctx = Sim.context({ ...p, seed }, cal);
+      const row = {};
+      for (const P of POL) {
+        const r = Sim.run(pool, P.id, ctx), hid = [];
+        r.finds.forEach((idx, k) => { const c = pool[idx]; if (c.label !== "great") hid.push(r.findH[k]); });
+        row[P.id] = { all: Float32Array.from(r.findH), hid: Float32Array.from(hid) };
+      }
+      MC.runs.push(row); i++;
+    }
+    renderStrip(); renderAnswer();
+    if (i < MC.N) setTimeout(chunk, 0);
+  };
+  chunk();
+}
+function metricOf(row, pid, metric) {
+  const x = row[pid], arr = metric === "h90all" ? x.all : x.hid;
+  if (metric === "budget") return x.hid.length ? bsearch(x.hid, S.budget) / x.hid.length : NaN;
+  return arr.length ? arr[Math.max(0, Math.ceil(arr.length * 0.9) - 1)] : NaN;
+}
+function med(pid, metric) { return Sim.quantile(MC.runs.map((r) => metricOf(r, pid, metric)), 0.5); }
+function renderAnswer() {
+  const n = MC.runs.length, host = $("#ansRows");
+  if (!host.children.length) {
+    for (const P of POL) host.append(el("div", { class: "ans-row", style: `--c: var(${P.c})`, "data-p": P.id },
+      el("span", { class: "nm" }, el("i"), P.name), el("div", { class: "ans-track" }, el("div", { class: "ans-fill" })), el("span", { class: "v", text: "…" })));
+  }
+  $("#ansProg").style.width = (100 * n) / MC.N + "%";
+  if (!n) { $("#ansSub").textContent = "Median over simulated pools · computing…"; return; }
+  const meds = Object.fromEntries(POL.map((P) => [P.id, med(P.id, "h90hidden")]));
+  const max = Math.max(...Object.values(meds).filter(Number.isFinite), 1);
+  for (const row of host.children) {
+    const v = meds[row.dataset.p];
+    row.querySelector(".v").textContent = fmtH(v);
+    row.querySelector(".ans-fill").style.width = Number.isFinite(v) ? (100 * v) / max + "%" : "0";
+  }
+  const d = 1 - meds.calibrated / meds.label;
+  $("#ansDelta").textContent = Number.isFinite(d) ? (d >= 0 ? "−" : "+") + Math.abs(Math.round(d * 100)) + "%" : "–";
+  $("#ansDeltaTxt").textContent = Number.isFinite(d) ? (d >= 0 ? "agent-hours with calibrated order instead of label order. Same pools, same research times." : "agent-hours: calibrated order is worse than label order here.") : "";
+  const wins = MC.runs.filter((r) => metricOf(r, "calibrated", "h90hidden") < metricOf(r, "label", "h90hidden")).length;
+  const ties = MC.runs.filter((r) => metricOf(r, "calibrated", "h90hidden") === metricOf(r, "label", "h90hidden")).length;
+  const scr = SCREENERS.find((s) => s.id === S.screener).name.toLowerCase();
+  $("#ansSub").textContent = `Median over ${n.toLocaleString("en")} simulated pools of ${S.p.n.toLocaleString("en")} · ${scr} screener calibration` + (n < MC.N ? " · computing…" : "");
+  $("#ansFoot").textContent = `Calibrated beat label order in ${wins} of ${n} pools` + (ties ? ` (tied in ${ties})` : "") + `. ${(n * 4 * S.p.n).toLocaleString("en")} simulated researches so far.`;
+}
+
+function renderStrip(reset) {
+  const svg = $("#strip"); if (!svg) return;
+  const W = svg.parentElement.clientWidth - 36 || 700, rowH = 46, m = { l: W < 520 ? 92 : 150, r: 20, t: 8, b: 34 }, H = m.t + m.b + rowH * POL.length;
+  const metric = MC.metric, n = MC.runs.length;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("height", H);
+  const vals = POL.map((P) => MC.runs.map((r) => metricOf(r, P.id, metric)));
+  const share = metric === "budget";
+  const xMax = share ? 1 : niceCeil(Math.max(10, ...vals.flat().filter(Number.isFinite)), 5);
+  const X = (v) => m.l + (v / xMax) * (W - m.l - m.r);
+  if (reset || svg.dataset.k !== metric + xMax + W) {
+    svg.textContent = ""; svg.dataset.k = metric + xMax + W; svg.dataset.n = 0;
+    for (const v of ticks(xMax, 5)) {
+      svg.append(sv("line", { x1: X(v), x2: X(v), y1: m.t, y2: H - m.b, stroke: C.soft }));
+      const t = sv("text", { x: X(v), y: H - m.b + 16, "text-anchor": "middle" }); t.textContent = share ? Math.round(v * 100) + "%" : v; svg.append(t);
+    }
+    const xl = sv("text", { x: W - m.r, y: H - 4, "text-anchor": "end" });
+    xl.textContent = { h90hidden: "agent-hours to find 90% of the #721s", h90all: "agent-hours to find 90% of all greats", budget: `share of #721s found within ${S.budget} agent-hours` }[metric];
+    svg.append(xl);
+    POL.forEach((P, k) => {
+      const y = m.t + rowH * k + rowH / 2;
+      const nm = sv("text", { x: 0, y: y + 4, class: "rowname" }); nm.textContent = W < 520 ? P.name.replace(" order", "").replace("Learns as it goes", "Learns") : P.name; svg.append(nm);
+      svg.append(sv("g", { id: "dots-" + P.id }));
+      svg.append(sv("g", { id: "med-" + P.id }));
+    });
+  }
+  const from = +svg.dataset.n || 0;
+  POL.forEach((P, k) => {
+    const g = document.getElementById("dots-" + P.id), y0 = m.t + rowH * k + rowH / 2;
+    for (let j = from; j < n; j++) {
+      const v = vals[k][j]; if (!Number.isFinite(v)) continue;
+      const jit = (Sim.rng32(j * 7 + k * 131 + 3)() - 0.5) * (rowH * 0.62);
+      g.append(sv("circle", { cx: X(v), cy: y0 + jit, r: 2.6, fill: C[P.id], "fill-opacity": 0.38 }));
+    }
+    const mg = document.getElementById("med-" + P.id); mg.textContent = "";
+    if (n) {
+      const q = Sim.quantile(vals[k], 0.5), lo = Sim.quantile(vals[k], 0.05), hi = Sim.quantile(vals[k], 0.95);
+      mg.append(sv("line", { x1: X(lo), x2: X(hi), y1: y0 + rowH * 0.42, y2: y0 + rowH * 0.42, stroke: C[P.id], "stroke-width": 2 }));
+      mg.append(sv("line", { x1: X(q), x2: X(q), y1: y0 - rowH * 0.42, y2: y0 + rowH * 0.42, stroke: C.ink, "stroke-width": 2.4 }));
+      const t = sv("text", { x: X(q) + 5, y: y0 - rowH * 0.26, fill: C.ink, "font-weight": 700 }); t.textContent = share ? pct(q) : fmtH(q); mg.append(t);
+    }
+  });
+  svg.dataset.n = n;
+  if (n === MC.N || n % 60 === 0) renderMCSum();
+}
+function renderStripMaybe() { if (MC.metric === "budget") renderStrip(true); }
+function renderMCSum() {
+  const n = MC.runs.length; if (!n) { $("#mcSum").textContent = ""; return; }
+  const metric = MC.metric, q = (pid) => Sim.quantile(MC.runs.map((r) => metricOf(r, pid, metric)), 0.5);
+  if (metric === "budget") {
+    $("#mcSum").innerHTML = `With ${S.budget} agent-hours to spend, the median pool’s label order finds <b>${pct(q("label"))}</b> of its #721s. Learns-as-it-goes finds <b>${pct(q("learned"))}</b> and calibrated finds <b>${pct(q("calibrated"))}</b>. Arrival order finds ${pct(q("arrival"))}. Drag the budget on the chart above to change it.`;
+  } else {
+    const what = metric === "h90all" ? "all greats" : "the #721s";
+    $("#mcSum").innerHTML = `Finding 90% of ${what} takes a median <b>${fmtH(q("label"))}</b> agent-hours in label order and <b>${fmtH(q("calibrated"))}</b> in calibrated order. Learns-as-it-goes, which never sees the benchmark table, takes <b>${fmtH(q("learned"))}</b>. Arrival order takes ${fmtH(q("arrival"))}. Bars show the middle 90% of pools.` +
+      (metric === "h90hidden" && Math.abs(q("label") - q("arrival")) / q("arrival") < 0.05 ? " On the #721s, label order is no faster than taking candidates in the order they arrived." : "") +
+      (metric === "h90all" ? " The first greats come at the same pace in every ranked lane. The gap opens on the ones the first pass undersold." : "");
+  }
+}
+
+// ---------------------------------------------------------------- sensitivity map
+const MAP = { mode: "sparse", tok: 0, visible: false, done: false };
+const MAPCOLS = { sparse: { k: "sparse", vals: [0.1, 0.2, 0.3, 0.4, 0.5], fmt: (v) => pct(v), head: "Share of sparse profiles" }, mult: { k: "sparseMult", vals: [1, 1.5, 2, 3, 4], fmt: (v) => v + "×", head: "Research time on a sparse profile" } };
+function invalidateMap() { MAP.done = false; MAP.tok++; if (MAP.visible) computeMap(); }
+function computeMap() {
+  const tok = ++MAP.tok, spec = MAPCOLS[MAP.mode], tbl = $("#map"); tbl.textContent = "";
+  const head = el("tr", {}, el("th", { text: "" }), ...spec.vals.map((v) => el("th", { scope: "col", text: spec.fmt(v) })));
+  tbl.append(el("thead", {}, el("tr", {}, el("th", {}), el("th", { colspan: spec.vals.length, text: spec.head })), head));
+  const body = el("tbody"); tbl.append(body);
+  const cells = [];
+  for (const s of SCREENERS) {
+    const tr = el("tr", {}, el("th", { scope: "row", text: s.name }));
+    for (const v of spec.vals) {
+      const td = el("td", { class: "pending", text: "·" });
+      if (s.id === S.screener && Math.abs(S.p[spec.k] - v) < 1e-9) td.classList.add("cur");
+      tr.append(td); cells.push({ s: s.id, v, td });
+    }
+    body.append(tr);
+  }
+  let ci = 0, pools = 60;
+  $("#mapStatus").textContent = "computing…";
+  const work = () => {
+    if (tok !== MAP.tok) return;
+    const t0 = performance.now();
+    while (ci < cells.length && performance.now() - t0 < 9) {
+      const cell = cells[ci], cal = DATA.counts[cell.s], p = { ...S.p, [spec.k]: cell.v }, sav = [];
+      for (let j = 0; j < pools; j++) {
+        const seed = 5000 + j, pool = Sim.makePool(p, cal, seed), ctx = Sim.context({ ...p, seed }, cal);
+        const h = {};
+        for (const pid of ["label", "calibrated"]) {
+          const r = Sim.run(pool, pid, ctx), hid = [];
+          r.finds.forEach((idx, k) => { if (pool[idx].label !== "great") hid.push(r.findH[k]); });
+          h[pid] = hid.length ? hid[Math.max(0, Math.ceil(hid.length * 0.9) - 1)] : NaN;
+        }
+        if (Number.isFinite(h.label) && h.label > 0) sav.push(1 - h.calibrated / h.label);
+      }
+      const q = Sim.quantile(sav, 0.5);
+      cell.td.classList.remove("pending");
+      cell.td.textContent = Number.isFinite(q) ? (Math.abs(q) < 0.005 ? "0%" : (q > 0 ? "−" : "+") + Math.round(Math.abs(q) * 100) + "%") : "n/a";
+      const strength = Math.min(1, Math.abs(q) / 0.6);
+      cell.td.style.background = Number.isFinite(q) ? `color-mix(in srgb, var(${q >= 0 ? "--calib" : "--label"}) ${Math.round(strength * 70)}%, var(--paper))` : "";
+      cell.td.style.color = strength > 0.55 ? "#fff" : "";
+      cell.td.title = `${SCREENERS.find((x) => x.id === cell.s).name}, ${spec.fmt(cell.v)}: median ${Number.isFinite(q) ? Math.round(q * 100) : "–"}% fewer agent-hours to find 90% of the #721s`;
+      ci++;
+    }
+    if (ci < cells.length) setTimeout(work, 0);
+    else { MAP.done = true; $("#mapStatus").textContent = `60 pools a cell` + (S.labelsUsed.includes("research") ? ` · “needs research” ${S.p.placement.replace("-", " ")}` : ""); mapNote(cells, spec); }
+  };
+  work();
+  $("#mapNote1").textContent = "";
+}
+
+function mapNote(cells, spec) {
+  const row = cells.filter((c) => c.s === S.screener).map((c) => ({ v: c.v, q: parseFloat(c.td.textContent.replace("−", "-")) }));
+  if (row.length < 2 || row.some((r) => !Number.isFinite(r.q))) return;
+  const a = row[0], b = row[row.length - 1], name = SCREENERS.find((s) => s.id === S.screener).name.toLowerCase();
+  const sv = (r) => (r.q <= 0 ? `${Math.abs(r.q)}% fewer` : `${r.q}% more`);
+  const A = Math.abs(a.q), B = Math.abs(b.q);
+  let txt;
+  if (row.every((r) => Math.abs(r.q) < 2)) {
+    txt = `With the ${name} screener` + (S.labelsUsed.includes("research") ? ` and “needs research” ${S.p.placement.replace("-", " ")}` : "") + ", label order and calibrated order come out the same across this range. Label order already puts the right candidates first.";
+  } else {
+    txt = `For the ${name} screener, the saving goes from ${sv(a)} agent-hours at ${spec.fmt(a.v)} to ${sv(b)} at ${spec.fmt(b.v)}.`;
+    if (MAP.mode === "sparse" && B < A) txt += " With more sparse profiles, calibrated order also has more low-odds candidates to work through, so the gap narrows.";
+    if (MAP.mode === "mult" && B < A) txt += " Calibrated order ranks by chance per research-minute, so it pushes slow sparse profiles later by itself. Label order ignores time.";
+    if (row.every((r) => r.q <= -5)) txt += " It doesn’t close anywhere in this range.";
+  }
+  $("#mapNote1").textContent = txt;
+}
+
+// ---------------------------------------------------------------- why table
+function renderWhy() {
+  const cal = DATA.counts[S.screener], post = S.ctx.post, labels = S.labelsUsed;
+  const tbl = $("#postTable"); tbl.textContent = "";
+  const nOf = (kind, l) => { let n = 0; for (const t of Sim.TIERS) n += (cal[kind] && cal[kind][t] && cal[kind][t][l]) || 0; return n; };
+  const cap = 0.1;
+  tbl.append(el("thead", {}, el("tr", {}, el("th", { text: "First pass" }), el("th", { text: "Full profile" }), el("th", { text: "Titles and dates only" }))));
+  const tb = el("tbody"); tbl.append(tb);
+  const cellFor = (kind, l) => {
+    const n = nOf(kind, l), p = post[kind][l];
+    const box = el("div", { class: "pbar" + (n ? "" : " na") });
+    const w = n ? Math.min(1, p / cap) : 0;
+    box.append(el("div", { class: "tr" }, el("div", { class: "fl" + (p > cap ? " over" : ""), style: `width:${(w * 100).toFixed(1)}%` })));
+    box.append(el("div", { class: "tx", html: n ? `<b>${pct(p, p < 0.1 ? 1 : 0)}</b><small>${oneIn(p)} · n=${n}</small>` : `<small>never given</small>` }));
+    return box;
+  };
+  for (const l of labels) tb.append(el("tr", {}, el("td", { text: LABEL_TXT[l] }), el("td", {}, cellFor("full", l)), el("td", {}, cellFor("sparse", l))));
+
+  const ct = $("#countTables"); ct.textContent = "";
+  for (const [kind, title] of [["full", "Measured: full profiles (plain, AI-polished, verbose)"], ["sparse", "Measured: titles and dates only"]]) {
+    const t = el("table", { class: "ct" });
+    t.append(el("thead", {}, el("tr", {}, el("th", { text: "true tier ↓ · label →" }), ...labels.map((l) => el("th", { text: l === "research" ? "research" : l })))));
+    const b = el("tbody");
+    for (const tier of [...Sim.TIERS].reverse()) {
+      const row = (cal[kind] && cal[kind][tier]) || {}, mx = Math.max(...labels.map((l) => row[l] || 0));
+      b.append(el("tr", {}, el("td", { text: tier }), ...labels.map((l) => el("td", { class: (row[l] || 0) === 0 ? "z" : (row[l] === mx ? "hi" : ""), text: row[l] || 0 }))));
+    }
+    t.append(b);
+    ct.append(el("div", {}, el("h4", { text: title }), t));
+  }
+  // measured sentence
+  const sp = cal.sparse || {}, tot = (r) => Object.values(r || {}).reduce((a, b) => a + b, 0);
+  const mode = (r) => Object.entries(r || {}).sort((a, b) => b[1] - a[1])[0] || ["–", 0];
+  const [gl, gn] = mode(sp.great), [dl, dn] = mode(sp.good);
+  let txt = `Measured on ${prettyModel(DATA.meta.model)} at ${DATA.meta.effort || "default"} effort: with titles and dates only, the ${SCREENERS.find((s) => s.id === S.screener).name.toLowerCase()} screener said “${LABEL_TXT[gl]}” to ${gn} of ${tot(sp.great)} ratings of great-on-paper candidates and “${LABEL_TXT[dl]}” to ${dn} of ${tot(sp.good)} ratings of good ones.`;
+  const fr = cal.full || {};
+  const resFull = Sim.TIERS.reduce((a, t) => a + ((fr[t] && fr[t].research) || 0), 0), allFull = Sim.TIERS.reduce((a, t) => a + tot(fr[t]), 0);
+  if (resFull) txt += ` On full profiles it also flagged ${resFull} of ${allFull} ratings for research, ${(fr.great && fr.great.research) || 0} of them for great candidates.`;
+  $("#whyMeasured").textContent = txt;
+  const sg = tot(sp.great);
+  $("#whyNote").textContent = `Chance = P(great | label, profile type), from the measured counts and the share of each tier set above (great ${pct(S.p.great, 1)}, good ${pct(S.p.good)}, okay ${pct(S.p.okay)}, poor ${pct(1 - S.p.great - S.p.good - S.p.okay)}). Counts get +0.5 smoothing because samples are small: ${sg} ratings of great-on-paper sparse profiles come from ${DATA.meta.tiers.great} candidates, so read the bars as directions, not decimals. Bars are capped at 10%.`;
+}
+
+// ---------------------------------------------------------------- try one candidate
+const TRY = { id: null, variant: "sparse", live: null, sample: null, ctl: null };
+function renderTrySelect() {
+  const sel = $("#trySel"); sel.textContent = "";
+  for (const c of DATA.candidates) {
+    const b = DATA.briefs[c.brief];
+    sel.append(el("option", { value: c.id, text: `#${c.id} · ${c.title} · ${TIER_TXT[c.tier]} · for ${b.title}, ${b.company}` }));
+  }
+  const pick = DATA.candidates.find((c) => c.brief === "A" && c.tier === "great" && (c.labels.naive?.sparse || []).some((l) => l !== "great")) || DATA.candidates[0];
+  TRY.id = pick.id; sel.value = pick.id;
+  sel.addEventListener("change", () => { TRY.id = sel.value; TRY.live = null; renderTry(); });
+  seg($("#segVariant"), [["plain", "Full profile"], ["sparse", "Titles and dates only"]], () => TRY.variant, (v) => { TRY.variant = v; TRY.live = null; renderTry(); });
+}
+function renderTry() {
+  if (!S.ctx || !TRY.id) return;
+  const c = DATA.candidates.find((x) => x.id === TRY.id), text = c[TRY.variant];
+  const wrap = $("#cvWrap");
+  if (TRY.sample) {
+    let ta = wrap.querySelector("textarea");
+    if (!ta || ta.dataset.src !== c.id + TRY.variant) {
+      wrap.textContent = "";
+      ta = el("textarea", { class: "cv", spellcheck: "false", "aria-label": "Profile text (editable)" }); ta.value = text; ta.dataset.src = c.id + TRY.variant;
+      ta.addEventListener("input", () => { TRY.live = null; renderTryOut(); });
+      wrap.append(ta, el("p", { class: "note", style: "margin:6px 0 0", text: "Editable. Paste any profile to rate it against this candidate’s role brief." }));
+    }
+  } else { wrap.textContent = ""; wrap.append(el("pre", { class: "cv", text })); }
+  renderTryOut();
+}
+function currentText() { const ta = $("#cvWrap textarea"); const c = DATA.candidates.find((x) => x.id === TRY.id); return ta ? ta.value : c[TRY.variant]; }
+function renderTryOut() {
+  const c = DATA.candidates.find((x) => x.id === TRY.id), out = $("#tryOut"); out.textContent = "";
+  const rec = (c.labels[S.screener] || {})[TRY.variant] || [];
+  const text = currentText(), words = text.trim().split(/\s+/).length;
+  const kind = TRY.live ? (words < DATA.meta.thin_words ? "sparse" : "full") : (TRY.variant === "sparse" ? "sparse" : "full");
+  const label = TRY.live ? TRY.live.label : rec[0];
+  const scr = SCREENERS.find((s) => s.id === S.screener).name;
+  out.append(el("div", { class: "labels" }, el("span", { class: "ctl-label", style: "white-space:normal", text: `${scr} screener, recorded:` }),
+    ...(rec.length ? rec.map((l) => el("span", { class: "lab " + l, text: LABEL_TXT[l] })) : [el("span", { class: "note", text: "no recorded label" })])));
+  out.append(el("p", { class: "note", style: "margin:0 0 12px", text: `True tier by the rubric: ${TIER_TXT[c.tier]}. ${rec.length} repeat${rec.length === 1 ? "" : "s"}, ${prettyModel(DATA.meta.model)}${DATA.meta.effort ? " at " + DATA.meta.effort + " effort" : ""}.` }));
+  if (TRY.live) out.append(el("div", { class: "labels" }, el("span", { class: "ctl-label", text: "Live, just now:" }), el("span", { class: "lab " + TRY.live.label, text: LABEL_TXT[TRY.live.label] })));
+  if (label) {
+    const p = S.ctx.post[kind][label] ?? 0;
+    out.append(el("div", { class: "ctl-label", style: "white-space:normal; display:block", text: `Chance research finds a great, given “${LABEL_TXT[label]}” on a ${kind} profile` }));
+    out.append(el("div", { class: "big", text: `${pct(p, p < 0.1 ? 1 : 0)}` }), el("div", { class: "note", text: oneIn(p) }));
+    for (const pid of ["label", "calibrated"]) {
+      const rk = Sim.rankIn(S.pool, pid, S.ctx, label, kind), n = S.pool.length, P = POL.find((x) => x.id === pid);
+      const range = rk.best === rk.worst ? `#${rk.best.toLocaleString("en")}` : `#${rk.best.toLocaleString("en")}–${rk.worst.toLocaleString("en")}`;
+      const bar = el("div", { class: "qbar" }, el("div", { class: "rg", style: `left:${(100 * (rk.best - 1)) / n}%; width:${Math.max(0.6, (100 * (rk.worst - rk.best + 1)) / n)}%` }), el("div", { class: "pt", style: `left:calc(${(100 * (rk.mid - 1)) / n}% - 1px)` }));
+      out.append(el("div", { class: "qstrip", style: `--c: var(${P.c})` }, el("div", { class: "qn" }, el("b", { text: P.name }), el("span", { text: `${range} of ${n.toLocaleString("en")}` })), bar));
+    }
+    out.append(el("p", { class: "note", style: "margin:10px 0 0", text: "Ranges are ties: every candidate with the same label, and for calibrated the same profile type, shares a place in the queue." }));
+  }
+  if (TRY.sample) out.append(liveBox());
+}
+function liveBox() {
+  const box = el("div", { class: "live" });
+  box.append(el("h4", { text: "Run this first pass live" }));
+  box.append(el("p", { text: `Sends the text above to Claude with the exact ${SCREENERS.find((s) => s.id === S.screener).name.toLowerCase()} prompt from the benchmark, on your Claude account. The table above was measured on ${prettyModel(DATA.meta.model)} at ${DATA.meta.effort || "default"} effort. A live answer may come from a different model, so it can differ.` }));
+  const go = el("button", { class: "btn primary", type: "button", text: "Rate it" });
+  const stop = el("button", { class: "btn", type: "button", text: "Stop", disabled: true });
+  const res = el("div", { class: "out", "aria-live": "polite" });
+  if (TRY.live) res.append(liveResult(TRY.live));
+  go.addEventListener("click", () => runLive(go, stop, res));
+  stop.addEventListener("click", () => TRY.ctl && TRY.ctl.abort());
+  box.append(el("div", { class: "row" }, go, stop), res);
+  return box;
+}
+function liveResult(L) {
+  const d = el("div");
+  d.append(el("div", { html: `<b>${LABEL_TXT[L.label]}</b>${L.tier ? ` · answered by the ${L.tier} model tier` : ""}` }));
+  if (L.reason) d.append(el("div", { class: "note", text: L.reason }));
+  if (L.evidence) d.append(el("ul", { class: "ev" }, ...L.evidence.map((e) => el("li", { text: `${e.ok ? "✓" : e.status === "evidenced" ? "✗" : "·"} ${e.label}${e.quote ? ": “" + e.quote + "”" : ""}${!e.ok && e.status === "evidenced" ? " (not in the text, so it doesn’t count)" : ""}` }))));
+  return d;
+}
+const RANK = ["poor", "okay", "good", "great"];
+function rubric(musts, nices, nMusts) { if (musts >= nMusts && nices >= 2) return "great"; if (musts >= nMusts) return "good"; if (musts === nMusts - 1) return "okay"; return "poor"; }
+function norm(s) { return String(s).toLowerCase().replace(/’/g, "'").replace(/–/g, "-").replace(/—/g, "-").replace(/["'`*_]/g, "").replace(/\s+/g, " ").trim(); }
+function quoteOK(q, profile) { const x = norm(q).replace(/^[ .,-]+|[ .,-]+$/g, ""); return x.length >= 3 && norm(profile).includes(x); }
+async function runLive(go, stop, res) {
+  const c = DATA.candidates.find((x) => x.id === TRY.id), brief = DATA.briefs[c.brief], text = currentText();
+  if (!text.trim()) return;
+  const prompt = brief.prompts[S.screener].split(DATA.meta.slot).join(text);
+  TRY.ctl = new AbortController(); go.disabled = true; stop.disabled = false;
+  res.textContent = "Thinking…";
+  try {
+    const raw = await TRY.sample.json(prompt, { signal: TRY.ctl.signal, modelTier: "default" });
+    let live;
+    if (S.screener === "facts_first") {
+      const items = Array.isArray(raw && raw.criteria) ? raw.criteria : [];
+      const st = {}, evidence = [];
+      for (const cr of brief.criteria) {
+        const it = items.find((x) => x && x.id === cr.id) || {};
+        let status = ["evidenced", "contradicted"].includes(it.status) ? it.status : "not_stated";
+        const quote = String(it.quote || "");
+        const ok = status === "evidenced" && quoteOK(quote, text);
+        if (status === "evidenced" && !ok) status = "not_stated";
+        st[cr.id] = status;
+        evidence.push({ label: cr.label, quote: it.status === "evidenced" ? quote : "", ok, status: it.status });
+      }
+      const musts = brief.criteria.filter((x) => x.kind === "must"), nices = brief.criteria.filter((x) => x.kind === "nice");
+      const m = musts.filter((x) => st[x.id] === "evidenced").length, nn = nices.filter((x) => st[x.id] === "evidenced").length;
+      const rating = rubric(m, nn, musts.length), thin = text.trim().split(/\s+/).length < DATA.meta.thin_words;
+      live = { label: thin && rating !== "great" ? "research" : rating, reason: `${m}/${musts.length} must-haves and ${nn}/${nices.length} nice-to-haves evidenced by verified quotes` + (thin && rating !== "great" ? "; thin profile, so it goes to research" : ""), evidence };
+    } else {
+      const rating = String(raw && raw.rating || "").trim().toLowerCase();
+      if (!RANK.includes(rating)) throw { code: "invalid_json" };
+      const flagged = S.screener === "instructed" && raw.needs_research === true;
+      live = { label: flagged ? "research" : rating, reason: String(raw.reason || "").slice(0, 400) };
+    }
+    TRY.live = live;
+    renderTryOut();
+  } catch (e) {
+    const code = e && e.code;
+    if (["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"].includes(code)) {
+      TRY.sample = null; renderTry();
+      $("#tryOut").append(el("p", { class: "note", text: "Live rating isn’t available in this view, so these are the recorded labels." }));
+      return;
+    }
+    res.textContent = { cancelled: "", rate_limited: "Too many requests just now. Try again in a minute.", invalid_json: "The reply wasn’t in the expected format. Try again.", session_expired: "Sign in to Claude again, then retry.", refused: "Claude declined this text." }[code] ?? "Something went wrong. Try again.";
+  } finally { go.disabled = false; stop.disabled = true; }
+}
+
+// ---------------------------------------------------------------- sources
+function renderSources() {
+  const m = DATA.meta, rows = [
+    ["First-pass labels", "measured", `${prettyModel(m.model)}${m.effort ? " at " + m.effort + " effort" : ""}, ${m.repeats} repeats, ${m.n_people} synthetic candidates (${m.tiers.great} great on paper). “Full” pools the plain, AI-polished and verbose renderings. Same counts as the table above.`],
+    ["What research reveals", "assumption", "Research always reveals the true tier. Real research is noisier. I haven’t modelled that."],
+    ["Research time", "19 min median", "Case study: #721’s research took 19 minutes and 58 actions. That’s one data point, so the spread (lognormal) is my assumption."],
+    ["Share who are great", "4%", "Case study: 35 calls booked from 887 researched, 3.9%. Calls booked stand in for “great”. They don’t measure it."],
+    ["Share with sparse profiles", "30%", "Assumption. Humans discount bare profiles too: in ResumeGo’s 2019 field experiment (24,570 fictitious applications), a LinkedIn profile with no role descriptions, a summary under 500 characters, 5 or fewer connections and no photo got 7.2% callbacks, against 13.5% for a comprehensive one. That bundles more than missing descriptions."],
+    ["Pool and agents", "6 per lane", "Assumption. Everyone is sourced before research starts, agents are interchangeable, and nobody new arrives mid-run."],
+    ["What calibrated knows", "best case", "It ranks with the same table the simulator draws labels from. Learns-as-it-goes gets no table, only the research results it has finished: Thompson sampling over label × profile-type buckets. In production, every finished research is a free calibration point."],
+  ];
+  const tb = $("#srcRows"); tb.textContent = "";
+  for (const [a, b, c] of rows) tb.append(el("tr", {}, el("td", { text: a }), el("td", { text: b }), el("td", { html: c.replace("ResumeGo’s 2019 field experiment", '<a href="https://www.resumego.net/research/linkedin-interview-chances/" target="_blank" rel="noopener">ResumeGo’s 2019 field experiment</a>') })));
+  const by = $("#byline");
+  by.textContent = DATA.author ? `Built by ${DATA.author}` : "";
+  const link = $("#chapterLink");
+  if (DATA.chapter_one) link.append(el("a", { href: DATA.chapter_one, text: "Read the first test’s full results →" }));
+  if (m.mock) $("#mockBanner").hidden = false;
+}
+
+// ---------------------------------------------------------------- wiring
+function init() {
+  readColors();
+  setupLanes();
+  seg($("#segScreener"), SCREENERS.map((s) => [s.id, s.name, SCREENER_DESC[s.id]]), () => S.screener, (v) => { S.screener = v; $("#scrDesc").textContent = SCREENER_DESC[v]; rebuild(); });
+  $("#scrDesc").textContent = SCREENER_DESC[S.screener];
+  seg($("#segSpeed"), [[1, "1×", "1 simulated hour per second"], [3, "3×", "3 simulated hours per second"], [10, "10×", "10 simulated hours per second"]], () => S.speed, (v) => { S.speed = v; });
+  seg($("#segChart"), [["hidden", "#721s"], ["all", "All greats"]], () => S.chart, (v) => { S.chart = v; drawChart(); });
+  seg($("#segMetric"), [["h90hidden", "90% of #721s"], ["h90all", "90% of all greats"], ["budget", "#721s in budget"]], () => MC.metric, (v) => { MC.metric = v; renderStrip(true); renderMCSum(); });
+  seg($("#segMap"), [["sparse", "Vary sparse share"], ["mult", "Vary sparse research time"]], () => MAP.mode, (v) => { MAP.mode = v; computeMap(); });
+  const ag = $("#agents");
+  ag.value = S.p.agents; $("#agentsOut").textContent = S.p.agents;
+  ag.addEventListener("input", () => { S.p.agents = +ag.value; $("#agentsOut").textContent = ag.value; debounceRebuild(); });
+  $("#play").addEventListener("click", () => { S.autoplay = false; S.pendingPlay = false; S.intro = null; setPlaying(!S.playing); });
+  $("#newPool").addEventListener("click", () => { S.seed++; rebuild(); });
+  const sc = $("#scrub");
+  sc.addEventListener("input", () => { S.autoplay = false; S.pendingPlay = false; S.intro = null; setPlaying(false); S.t = (+sc.value / 1000) * S.tEnd; for (const L of lanes) { L.bursts = []; L.hops = []; L.agentLast = []; } rebuildTicker(); S.dirty = true; });
+  $("#budget").addEventListener("input", (e) => { S.budget = +e.target.value; drawBudget(); renderStripMaybe(); if (MC.metric === "budget") renderMCSum(); });
+  $("#mcAgain").addEventListener("click", () => { MC.seedBase += MC.N; startMC(); });
+  renderKnobs(); renderSources(); renderTrySelect();
+  document.addEventListener("keydown", (e) => {
+    if (e.code !== "Space" || e.target.closest("input, textarea, select, button, a")) return;
+    e.preventDefault(); S.autoplay = false; S.pendingPlay = false; setPlaying(!S.playing);
+  });
+  const ro = new ResizeObserver(() => { layoutLanes(); drawChart(); renderStrip(true); });
+  ro.observe($("#lanes"));
+  const io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) { MAP.visible = true; if (!MAP.done) computeMap(); io.disconnect(); } });
+  io.observe($("#map"));
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readColors);
+  new MutationObserver(readColors).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class", "style"] });
+  rebuild();
+  requestAnimationFrame(step);
+  // Live first pass: only inside a Claude viewer that serves the capability.
+  if (window.claude && typeof window.claude.use === "function") {
+    window.claude.use("sample").then((s) => { if (s) { TRY.sample = s; renderTry(); } }).catch(() => {});
+  }
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>
+
+</body>
+</html>

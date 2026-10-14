@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same Person, Different Profile</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,100..900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+:root {
+  color-scheme: light;
+  --ground: #e9edf1;
+  --paper: #ffffff;
+  --ink: #14213d;
+  --graphite: #566173;
+  --rule: #cdd4dc;
+  --rule-soft: #e3e8ee;
+  --marker: #ffe45c;
+  --marker-ink: #14213d;
+  --naive: #c2364a;
+  --patched: #6b5fc7;
+  --facts: #008a6e;
+  --alarm: #b3263b;
+  --sans: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --serif: "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #12161c; --paper: #1b2129; --ink: #e6eaf0; --graphite: #9aa4b2;
+    --rule: #333c48; --rule-soft: #262e38; --marker: #ffe45c; --marker-ink: #14213d;
+    --naive: #e0566a; --patched: #8a7fe0; --facts: #1fa384; --alarm: #e0566a;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #12161c; --paper: #1b2129; --ink: #e6eaf0; --graphite: #9aa4b2;
+  --rule: #333c48; --rule-soft: #262e38; --marker: #ffe45c; --marker-ink: #14213d;
+  --naive: #e0566a; --patched: #8a7fe0; --facts: #1fa384; --alarm: #e0566a;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--ground); color: var(--ink);
+  font-family: var(--sans); font-size: 17px; line-height: 1.55; font-stretch: 100%;
+}
+.page { max-width: 1140px; margin: 0 auto; padding-block: 56px 80px;
+  padding-left: max(24px, env(safe-area-inset-left, 0px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+@media (max-width: 640px) { .page { padding-block: 32px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); } body { font-size: 16px; } }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--patched); outline-offset: 2px; }
+
+/* Masthead */
+.mock {
+  background: var(--alarm); color: #fff; font-weight: 600; padding: 12px 16px;
+  border-radius: 4px; margin: 0 0 32px; max-width: 70ch;
+}
+h1 {
+  font-size: clamp(2.6rem, 7.2vw, 5.4rem); line-height: 0.95; font-weight: 820;
+  font-stretch: 125%; letter-spacing: -0.015em; margin: 0 0 24px; max-width: 12ch; text-wrap: balance;
+}
+.lede { font-size: 1.18rem; line-height: 1.55; color: var(--graphite); max-width: 60ch; margin: 0 0 28px; }
+.lede strong { color: var(--ink); font-weight: 600; }
+.runfacts { display: flex; flex-wrap: wrap; gap: 12px 40px; margin: 0; padding: 18px 0 0; border-top: 2px solid var(--ink); }
+.runfacts div { min-width: 0; }
+.runfacts dt { font-size: 0.82rem; color: var(--graphite); }
+.runfacts dd { margin: 2px 0 0; font-weight: 650; font-stretch: 90%; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+
+.switch { display: inline-flex; gap: 0; margin: 40px 0 0; border: 1.5px solid var(--ink); border-radius: 6px; overflow: hidden; }
+.switch button {
+  font: inherit; font-size: 0.92rem; font-weight: 600; padding: 7px 14px; border: 0; cursor: pointer;
+  background: transparent; color: var(--ink);
+}
+.switch button + button { border-left: 1.5px solid var(--ink); }
+.switch button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.switch-label { font-size: 0.92rem; color: var(--graphite); margin-right: 10px; }
+
+/* Exhibit */
+.exhibit { margin: 64px 0 0; }
+h2 { text-wrap: balance; font-size: clamp(1.45rem, 2.6vw, 1.9rem); line-height: 1.15; font-weight: 750; font-stretch: 112%; margin: 0 0 10px; letter-spacing: -0.005em; }
+.sub { color: var(--graphite); margin: 0 0 24px; max-width: 64ch; }
+.slips {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px;
+}
+@media (max-width: 900px) {
+  .slips { grid-template-columns: repeat(4, minmax(260px, 1fr)); overflow-x: auto; scroll-snap-type: x mandatory;
+    padding-bottom: 10px; margin: 0 -24px; padding-left: 24px; padding-right: 24px; }
+  .slip { scroll-snap-align: start; }
+}
+@media (max-width: 640px) { .slips { margin: 0 -16px; padding-left: 16px; padding-right: 16px; } }
+.slip {
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 3px;
+  display: flex; flex-direction: column; min-width: 0;
+}
+.slip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 14px 16px 8px; }
+.slip-head h3 { margin: 0; font-size: 1.02rem; font-weight: 700; font-stretch: 105%; }
+.slip-head span { font-size: 0.8rem; color: var(--graphite); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cv {
+  position: relative; margin: 0; padding: 0 16px; font-family: var(--serif); font-size: 0.8rem; line-height: 1.5;
+  white-space: pre-wrap; overflow-wrap: anywhere; max-height: 15.5em; overflow: hidden; flex: 1 1 auto;
+}
+.cv::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3.5em;
+  background: linear-gradient(to bottom, transparent, var(--paper)); pointer-events: none;
+}
+.cv.short::after { display: none; }
+.expanded .cv { max-height: none; }
+.expanded .cv::after { display: none; }
+.verdicts { margin: 12px 0 0; padding: 10px 16px 14px; border-top: 1px dashed var(--rule); display: grid; gap: 6px; }
+.verdict { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 0.88rem; }
+.verdict .who { color: var(--graphite); display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; }
+.who { display: inline-flex; align-items: center; gap: 8px; }
+.who i { display: inline-block; width: 16px; height: 0; border-top: 3px solid var(--c); flex: none; }
+.who i.dash { border-top-style: dashed; }
+.who i.dot { border-top-style: dotted; border-top-width: 4px; }
+.mark { font-weight: 650; padding: 1px 6px; border-radius: 2px; white-space: nowrap; }
+.mark.changed {
+  color: var(--marker-ink);
+  background: linear-gradient(176deg, transparent 8%, var(--marker) 9%, var(--marker) 88%, transparent 90%);
+}
+.mark.research { font-weight: 600; color: var(--graphite); border: 1.5px dashed var(--graphite); padding: 0 6px; }
+.mark .dir { font-size: 0.72em; margin-right: 3px; vertical-align: 1px; }
+.toggle {
+  margin: 18px 0 0; font: inherit; font-size: 0.92rem; font-weight: 600; color: var(--ink); cursor: pointer;
+  background: transparent; border: 1.5px solid var(--ink); border-radius: 6px; padding: 7px 14px;
+}
+.caption { margin: 18px 0 0; max-width: 70ch; }
+.key { display: flex; flex-wrap: wrap; gap: 8px 22px; margin: 14px 0 0; font-size: 0.86rem; color: var(--graphite); }
+.key span { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Findings */
+.finding {
+  display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 40px; align-items: start;
+  margin: 80px 0 0; padding-top: 26px; border-top: 2px solid var(--ink);
+}
+@media (max-width: 900px) { .finding { grid-template-columns: minmax(0, 1fr); gap: 20px; margin-top: 56px; } }
+.finding p { margin: 0 0 12px; max-width: 58ch; }
+.answer { font-weight: 750; font-stretch: 112%; }
+.finding .fine { font-size: 0.88rem; color: var(--graphite); }
+.figure { background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 18px 18px 12px; margin: 0; min-width: 0; }
+.figure svg { display: block; width: 100%; height: auto; overflow: visible; }
+.figure svg text { fill: var(--graphite); font-family: var(--sans); font-size: 12.5px; }
+.figure svg .lbl { fill: var(--ink); font-weight: 600; font-size: 13px; }
+.figure svg .val { fill: var(--ink); font-weight: 650; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.figure figcaption { font-size: 0.82rem; color: var(--graphite); margin-top: 8px; }
+
+/* Twins grid */
+.twins { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-top: 8px; }
+@media (max-width: 900px) { .twins { grid-template-columns: minmax(0, 1fr); } }
+.twin { background: var(--paper); border: 1px solid var(--rule); border-radius: 3px; padding: 16px 18px; min-width: 0; }
+.twin h3 { margin: 0; font-size: 1.05rem; font-weight: 700; font-stretch: 105%; }
+.twin .meta { color: var(--graphite); font-size: 0.86rem; margin: 2px 0 12px; }
+.grid4 { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.grid4 th { font-weight: 600; color: var(--graphite); text-align: left; padding: 4px 6px 6px 0; font-size: 0.8rem; }
+.grid4 td { padding: 5px 6px 5px 0; border-top: 1px solid var(--rule-soft); vertical-align: middle; }
+.grid4 td:first-child { color: var(--graphite); white-space: nowrap; }
+.scroll { overflow-x: auto; }
+details.texts { margin-top: 10px; }
+details.texts summary { cursor: pointer; font-size: 0.88rem; font-weight: 600; }
+details.texts .pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+@media (max-width: 640px) { details.texts .pair { grid-template-columns: minmax(0, 1fr); } }
+details.texts pre { margin: 4px 0 0; font-family: var(--serif); font-size: 0.78rem; line-height: 1.45; white-space: pre-wrap;
+  overflow-wrap: anywhere; background: var(--ground); border-radius: 3px; padding: 10px; max-height: 320px; overflow: auto; }
+details.texts h4 { margin: 0; font-size: 0.82rem; color: var(--graphite); font-weight: 600; }
+
+/* Tables and method */
+.wide { margin: 80px 0 0; padding-top: 26px; border-top: 2px solid var(--ink); }
+.metrics { width: 100%; border-collapse: collapse; background: var(--paper); border: 1px solid var(--rule); font-size: 0.92rem; }
+.metrics th, .metrics td { padding: 9px 14px; border-bottom: 1px solid var(--rule-soft); text-align: right; font-variant-numeric: tabular-nums; }
+.metrics th:first-child, .metrics td:first-child { text-align: left; }
+.metrics thead th { font-weight: 650; border-bottom: 1.5px solid var(--ink); }
+.metrics td:first-child { color: var(--graphite); }
+.method { max-width: 72ch; padding-left: 1.1em; color: var(--graphite); }
+.method li { margin: 0 0 10px; }
+.colophon { margin-top: 56px; font-size: 0.84rem; color: var(--graphite); max-width: 72ch; }
+@media (prefers-reduced-motion: no-preference) { .cv { transition: max-height .25s ease; } }
+</style>
+</head>
+<body>
+<main class="page">
+  <div id="mock"></div>
+  <header>
+    <h1>Same person, different profile</h1>
+    <p class="lede" id="lede"></p>
+    <dl class="runfacts" id="runfacts"></dl>
+    <div id="switch-wrap"></div>
+  </header>
+
+  <section class="exhibit" aria-labelledby="exhibit-h">
+    <h2 id="exhibit-h"></h2>
+    <p class="sub" id="exhibit-sub"></p>
+    <div class="slips" id="slips"></div>
+    <div class="key" id="key"></div>
+    <button class="toggle" id="toggle" type="button" aria-expanded="false">Show full profiles</button>
+    <p class="caption" id="caption"></p>
+  </section>
+
+  <section class="finding" aria-labelledby="f1-h">
+    <div>
+      <h2 id="f1-h">Are sparse profiles marked down?</h2>
+      <div id="f1-text"></div>
+    </div>
+    <figure class="figure" id="f1-fig"></figure>
+  </section>
+
+  <section class="finding" aria-labelledby="f2-h">
+    <div>
+      <h2 id="f2-h">Does telling the model to flag unknowns fix it?</h2>
+      <div id="f2-text"></div>
+    </div>
+    <figure class="figure" id="f2-fig"></figure>
+  </section>
+
+  <section class="finding" aria-labelledby="f3-h">
+    <div>
+      <h2 id="f3-h">Does writing style change the label?</h2>
+      <div id="f3-text"></div>
+    </div>
+    <figure class="figure" id="f3-fig"></figure>
+  </section>
+
+  <section class="finding" aria-labelledby="f4-h">
+    <div>
+      <h2 id="f4-h">Does AI polish raise the rating?</h2>
+      <div id="f4-text"></div>
+    </div>
+    <figure class="figure" id="f4-fig"></figure>
+  </section>
+
+  <section class="wide" aria-labelledby="t-h">
+    <h2 id="t-h">More candidates</h2>
+    <p class="sub">The same comparison for other candidates. Highlighted labels differ from the plain version.</p>
+    <div class="twins" id="twins"></div>
+  </section>
+
+  <section class="wide" aria-labelledby="m-h">
+    <h2 id="m-h">Every metric</h2>
+    <div class="scroll"><table class="metrics" id="metrics"></table></div>
+  </section>
+
+  <section class="wide" aria-labelledby="meth-h">
+    <h2 id="meth-h">How this was measured</h2>
+    <ul class="method"><li>Every candidate is synthetic and every comparison is within the same person: the four versions of a profile carry identical facts except sparse, which keeps only titles, companies and dates.</li><li>AI-polished and verbose versions are LLM rewrites that pass a deterministic check: every title, company, year, number and named technology must survive, and no named technology may be introduced.</li><li>Repeat noise is how often a screener disagrees with itself when rating the same text twice. A style flip rate only means something to the extent it exceeds that. The gap is averaged per candidate, with a 95% bootstrap interval over candidates and a paired Wilcoxon test; an effect is reported only when both agree.</li><li>Facts-first sends a profile to research when it is under 60 words and not already rated great. On this benchmark that threshold separates sparse from complete profiles cleanly, so its routing accuracy here is a best case.</li><li>The reference tier comes from a published rubric applied to the generated facts (3 must-haves, 3 nice-to-haves). Agreement with it is a sanity check, not the headline. Facts-first scores with that same rubric, so its agreement figure is flattered by construction and should not be compared head to head.</li><li>These screeners are built here. Nothing in this repo measures Metaview&#x27;s production screener; the harness is designed so that screener could be plugged in.</li><li>Prior work this builds on: Xu et al., &quot;AI Self-preferencing in Algorithmic Hiring&quot; (AIES 2025, arXiv 2509.00462); Zheng et al., &quot;Judging LLM-as-a-Judge&quot; (NeurIPS 2023); Castleman et al., &quot;Measuring Validity in LLM-based Resume Screening&quot; (IASEAI 2026).</li></ul>
+  </section>
+
+  <p class="colophon" id="colophon"></p>
+</main>
+<script>
+const S = {"meta": {"mock": false, "models": ["claude-sonnet-5-5"], "screeners": ["naive", "instructed", "facts_first"], "repeats": 2, "effort": "low", "n_people": 21, "generator_model": "claude-sonnet-5-5", "failed_rewrites": 0, "cost_usd": 1.939448, "generated_at": "2026-10-14 11:27 UTC"}, "metrics": {"claude-sonnet-5-5": {"naive": {"n_persons": 21, "noise_floor": 0.015873015873015872, "flip_plain_polished": 0.023809523809523808, "flip_plain_verbose": 0.14285714285714285, "flip_any_style": 0.14285714285714285, "excess_polished": 0.007936507936507938, "excess_polished_ci": [0.0, 0.023809523809523808], "excess_polished_p": 0.6830913983096087, "excess_verbose": 0.12698412698412698, "excess_verbose_ci": [0.0, 0.2857142857142857], "n_obs_great": 12, "delta_polished": 0.023809523809523808, "delta_polished_ci": [0.0, 0.07142857142857142], "delta_polished_p": 0.6830913983096087, "delta_verbose": -0.047619047619047616, "delta_verbose_ci": [-0.23809523809523808, 0.09523809523809523], "delta_verbose_p": 0.7066777846983747, "delta_sparse": -0.9047619047619048, "delta_sparse_ci": [-1.2857142857142858, -0.5], "sparse_downgrade": 0.6428571428571429, "sparse_research": 0.0, "false_research": 0.0, "pattern_721": 1.0, "n_great": 6, "agree_ref_plain": 0.7142857142857143, "within1_ref_plain": 1.0, "agree_ref_polished": 0.7380952380952381, "kendall_tau_plain_vs_polished": 0.9775971575918403, "false_research_by_tier": {"poor": {"rate": 0.0, "hits": 0, "n": 18}, "okay": {"rate": 0.0, "hits": 0, "n": 36}, "good": {"rate": 0.0, "hits": 0, "n": 36}, "great": {"rate": 0.0, "hits": 0, "n": 36}}, "sparse_mode_label": "okay", "sparse_mode_share": 0.9047619047619048, "sparse_n": 42, "mean_score": {"plain": 1.8095238095238095, "polished": 1.8333333333333333, "verbose": 1.7619047619047619, "sparse": 0.9047619047619048}, "mean_score_ci": {"plain": [1.4761904761904763, 2.142857142857143], "polished": [1.4761904761904763, 2.2142857142857144], "verbose": [1.4285714285714286, 2.096428571428565], "sparse": [0.7857142857142857, 1.0]}}, "instructed": {"n_persons": 21, "noise_floor": 0.0, "flip_plain_polished": 0.09523809523809523, "flip_plain_verbose": 0.047619047619047616, "flip_any_style": 0.14285714285714285, "excess_polished": 0.09523809523809523, "excess_polished_ci": [0.0, 0.23809523809523808], "excess_polished_p": 0.43351361937168, "excess_verbose": 0.047619047619047616, "excess_verbose_ci": [0.0, 0.14285714285714285], "n_obs_great": 12, "delta_polished": -0.09523809523809523, "delta_polished_ci": [-0.23809523809523808, 0.0], "delta_polished_p": 0.43351361937168, "delta_verbose": -0.047619047619047616, "delta_verbose_ci": [-0.14285714285714285, 0.0], "delta_verbose_p": 0.6830913983096087, "delta_sparse": -0.9047619047619048, "delta_sparse_ci": [-1.2380952380952381, -0.5238095238095238], "sparse_downgrade": 0.0, "sparse_research": 1.0, "false_research": 0.29365079365079366, "pattern_721": 0.0, "n_great": 6, "agree_ref_plain": 0.7142857142857143, "within1_ref_plain": 1.0, "agree_ref_polished": 0.7142857142857143, "kendall_tau_plain_vs_polished": 0.9174967459576095, "false_research_by_tier": {"poor": {"rate": 0.6111111111111112, "hits": 11, "n": 18}, "okay": {"rate": 0.5833333333333334, "hits": 21, "n": 36}, "good": {"rate": 0.1388888888888889, "hits": 5, "n": 36}, "great": {"rate": 0.0, "hits": 0, "n": 36}}, "sparse_mode_label": "okay", "sparse_mode_share": 1.0, "sparse_n": 42, "mean_score": {"plain": 1.9047619047619047, "polished": 1.8095238095238095, "verbose": 1.8571428571428572, "sparse": 1}, "mean_score_ci": {"plain": [1.5714285714285714, 2.2857142857142856], "polished": [1.4285714285714286, 2.1904761904761907], "verbose": [1.4761904761904763, 2.1904761904761907], "sparse": [1.0, 1.0]}}, "facts_first": {"n_persons": 21, "noise_floor": 0.015873015873015872, "flip_plain_polished": 0.047619047619047616, "flip_plain_verbose": 0.07142857142857142, "flip_any_style": 0.11904761904761904, "excess_polished": 0.031746031746031744, "excess_polished_ci": [-0.047619047619047616, 0.14285714285714285], "excess_polished_p": 0.9847609063819912, "excess_verbose": 0.05555555555555556, "excess_verbose_ci": [0.0, 0.1507936507936508], "n_obs_great": 12, "delta_polished": 0.047619047619047616, "delta_polished_ci": [0.0, 0.14285714285714285], "delta_polished_p": 0.6830913983096087, "delta_verbose": 0.023809523809523808, "delta_verbose_ci": [-0.07142857142857142, 0.14285714285714285], "delta_verbose_p": 0.9847609063819912, "delta_sparse": -1.6666666666666667, "delta_sparse_ci": [-2.0952380952380953, -1.2380952380952381], "sparse_downgrade": 0.0, "sparse_research": 1.0, "false_research": 0.0, "pattern_721": 0.0, "n_great": 6, "agree_ref_plain": 0.9523809523809523, "within1_ref_plain": 1.0, "agree_ref_polished": 1.0, "kendall_tau_plain_vs_polished": 0.9659489017972783, "false_research_by_tier": {"poor": {"rate": 0.0, "hits": 0, "n": 18}, "okay": {"rate": 0.0, "hits": 0, "n": 36}, "good": {"rate": 0.0, "hits": 0, "n": 36}, "great": {"rate": 0.0, "hits": 0, "n": 36}}, "sparse_mode_label": "poor", "sparse_mode_share": 1.0, "sparse_n": 42, "mean_score": {"plain": 1.6666666666666667, "polished": 1.7142857142857142, "verbose": 1.6904761904761905, "sparse": 0}, "mean_score_ci": {"plain": [1.2380952380952381, 2.0952380952380953], "polished": [1.2857142857142858, 2.142857142857143], "verbose": [1.2380952380952381, 2.0952380952380953], "sparse": [0.0, 0.0]}}}}, "word_counts": {"plain": 116.57142857142857, "polished": 149.8095238095238, "verbose": 245.76190476190476, "sparse": 27.761904761904763}, "errors": 0, "cards": [{"id": "A02", "brief": "A", "ref_tier": "great", "criteria_met": ["design_systems", "graphics", "mentoring", "product_ownership", "ts_react"], "labels": {"naive": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "good", "all": ["good", "good"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": false}}, "instructed": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "good", "all": ["good", "good"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": true}}, "facts_first": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "poor", "all": ["poor", "poor"], "research": true}}}, "style_flip": true, "sparse_drop": true, "overroutes": false, "texts": {"plain": "Candidate #A02\nSenior Frontend Engineer at Tallyhand\n\nExperience\nSenior Frontend Engineer - Tallyhand (Series C, 480 people) \u00b7 2022-present\n- Wrote WebGL shaders for the 3D product preview, rendering 4k models a day\n- Managed a squad of 4 frontend engineers\n- Owned the component library and Figma-to-code design tokens used across 6 apps\n\nProduct Engineer - Lumen Harbor (Series C, 340 people) \u00b7 2020-2022\n- Owned the onboarding experience end to end, from spec to launch, cutting drop-off by 18%\n- Added end-to-end tests with Playwright, raising test coverage by 14 points\n- Rewrote the checkout flow in React with TypeScript, lifting conversion by 35%\n\nEducation: BSc Computer Science\nSkills: Figma, Playwright, React, TypeScript, WebGL\n", "polished": "Candidate #A02\nSenior Frontend Engineer at Tallyhand\n\nSummary: Frontend engineer who leads teams and ships polished, high-impact user experiences, from WebGL-powered 3D previews to design systems and conversion-focused product flows.\n\nExperience\n\nSenior Frontend Engineer - Tallyhand (Series C, 480 people) \u00b7 2022-present\n- Wrote WebGL shaders for the 3D product preview, powering the rendering of 4k models a day\n- Led and managed a squad of 4 frontend engineers\n- Owned the component library and the Figma-to-code design tokens used across 6 apps, keeping design and engineering aligned\n\nProduct Engineer - Lumen Harbor (Series C, 340 people) \u00b7 2020-2022\n- Owned the onboarding experience end to end, from spec to launch, cutting drop-off by 18%\n- Added end-to-end tests with Playwright, raising test coverage by 14 points\n- Rewrote the checkout flow in React with TypeScript, lifting conversion by 35%\n\nEducation: BSc Computer Science\n\nSkills: Figma, Playwright, React, TypeScript, WebGL\n", "verbose": "Candidate #A02\nSenior Frontend Engineer at Tallyhand\n\nExperience\n\nSenior Frontend Engineer - Tallyhand (Series C, 480 people) \u00b7 2022-present\n- Wrote WebGL shaders for the 3D product preview, a feature that renders 4k models a day, which called for careful, hands-on work at the graphics layer of the product to produce the visual experience users see when they preview an item in three dimensions.\n- Managed a squad of 4 frontend engineers, taking on responsibility for leading the team in addition to contributing as an individual engineer, and supporting the group in the delivery of its frontend work.\n- Owned the component library and the Figma-to-code design tokens used across 6 apps, holding responsibility for the shared building blocks and the design-to-code foundation that those 6 apps depend on and draw from.\n\nProduct Engineer - Lumen Harbor (Series C, 340 people) \u00b7 2020-2022\n- Owned the onboarding experience end to end, from spec to launch, carrying the work through every stage from the initial specification to the final release, and cutting drop-off by 18%.\n- Added end-to-end tests with Playwright, introducing this layer of automated verification to the codebase and raising test coverage by 14 points.\n- Rewrote the checkout flow in React with TypeScript, redoing this central part of the product using those technologies, and lifting conversion by 35%.\n\nEducation: BSc Computer Science\n\nSkills: Figma, Playwright, React, TypeScript, WebGL\n", "sparse": "Candidate #A02\nSenior Frontend Engineer at Tallyhand\n\nExperience\nSenior Frontend Engineer - Tallyhand \u00b7 2022-present\nProduct Engineer - Lumen Harbor \u00b7 2020-2022\n\nEducation: BSc Computer Science\n"}, "evidence": {"plain": {"ts_react": "Rewrote the checkout flow in React with TypeScript, lifting conversion by 35%", "design_systems": "Owned the component library and Figma-to-code design tokens used across 6 apps", "product_ownership": "Owned the onboarding experience end to end, from spec to launch, cutting drop-off by 18%", "graphics": "Wrote WebGL shaders for the 3D product preview, rendering 4k models a day", "mentoring": "Managed a squad of 4 frontend engineers"}, "sparse": {}}}, {"id": "B01", "brief": "B", "ref_tier": "great", "criteria_met": ["distributed_scale", "go_lang", "kubernetes", "postgres", "terraform"], "labels": {"naive": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "good", "all": ["good", "good"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": false}}, "instructed": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "good", "all": ["good", "good"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": true}}, "facts_first": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "poor", "all": ["poor", "poor"], "research": true}}}, "style_flip": true, "sparse_drop": true, "overroutes": false, "texts": {"plain": "Candidate #B01\nSenior Backend Engineer at Cinderpath\n\nExperience\nSenior Backend Engineer - Cinderpath (Series C, 340 people) \u00b7 2024-present\n- Wrote the event ingestion service in Go, handling 40k requests per second\n- Ran 5 production Kubernetes clusters across 3 regions\n- Designed a sharded queueing system processing 18 million events per day\n\nSite Reliability Engineer - Corvid Systems (Series C, 220 people) \u00b7 2020-2024\n- Maintained a MySQL reporting database of 8 GB\n- Set up Grafana dashboards covering 30 key service metrics\n- Tuned Postgres for a 7 TB dataset, cutting p99 query latency by 22%\n\nSoftware Engineer - Paperlane (Series C, 220 people) \u00b7 2014-2020\n- Managed all infrastructure as code in Terraform across 11 AWS accounts\n- Wrote Java services for the billing team, 5 services in total\n- Built internal admin tools in Ruby on Rails used by 18 support staff\n\nEducation: BSc Computer Science\nSkills: AWS, Go, Grafana, Java, Kubernetes, MySQL, Postgres, Ruby on Rails, Terraform\n", "polished": "Candidate #B01\nSenior Backend Engineer at Cinderpath\n\nSummary: Backend and reliability engineer with experience across Cinderpath, Corvid Systems and Paperlane, building high-throughput services, running production infrastructure and tuning data systems at scale.\n\nExperience\n\nSenior Backend Engineer - Cinderpath (Series C, 340 people) \u00b7 2024-present\n- Built the event ingestion service in Go, reliably handling 40k requests per second\n- Operated 5 production Kubernetes clusters across 3 regions\n- Designed a sharded queueing system that processes 18 million events per day\n\nSite Reliability Engineer - Corvid Systems (Series C, 220 people) \u00b7 2020-2024\n- Maintained a MySQL reporting database of 8 GB\n- Set up Grafana dashboards covering 30 key service metrics, giving teams clear visibility into service health\n- Tuned Postgres for a 7 TB dataset, cutting p99 query latency by 22%\n\nSoftware Engineer - Paperlane (Series C, 220 people) \u00b7 2014-2020\n- Managed all infrastructure as code in Terraform across 11 AWS accounts\n- Developed Java services for the billing team, 5 services in total\n- Built internal admin tools in Ruby on Rails, used by 18 support staff\n\nEducation: BSc Computer Science\n\nSkills: AWS, Go, Grafana, Java, Kubernetes, MySQL, Postgres, Ruby on Rails, Terraform\n", "verbose": "Candidate #B01\nSenior Backend Engineer at Cinderpath\n\nExperience\n\nSenior Backend Engineer - Cinderpath (Series C, 340 people) \u00b7 2024-present\n- Wrote the event ingestion service in Go, a core piece of backend software responsible for taking in incoming events and capable of handling 40k requests per second, which demonstrates the throughput the service was built to sustain.\n- Ran 5 production Kubernetes clusters across 3 regions, taking on the ongoing operational responsibility for keeping these live production environments running and distributed across multiple geographic locations.\n- Designed a sharded queueing system processing 18 million events per day, creating the architecture of a queueing layer that divides its workload through sharding and works through a very large daily volume of events.\n\nSite Reliability Engineer - Corvid Systems (Series C, 220 people) \u00b7 2020-2024\n- Maintained a MySQL reporting database of 8 GB, looking after the day-to-day upkeep of the database that supported the company's reporting needs.\n- Set up Grafana dashboards covering 30 key service metrics, establishing the dashboards that gave visibility into the health and behavior of the services through those 30 important measures.\n- Tuned Postgres for a 7 TB dataset, cutting p99 query latency by 22%, which involved performance tuning work on a very large dataset and resulted in a measurable reduction in the slowest query response times at the p99 level.\n\nSoftware Engineer - Paperlane (Series C, 220 people) \u00b7 2014-2020\n- Managed all infrastructure as code in Terraform across 11 AWS accounts, taking responsibility for defining and maintaining the entirety of the infrastructure through code, spanning a total of 11 separate accounts on AWS.\n- Wrote Java services for the billing team, 5 services in total, contributing the backend services that the billing team relied upon and delivering a set of 5 distinct services.\n- Built internal admin tools in Ruby on Rails used by 18 support staff, developing the internal tooling that supported the work of 18 members of the support staff.\n\nEducation: BSc Computer Science\nSkills: AWS, Go, Grafana, Java, Kubernetes, MySQL, Postgres, Ruby on Rails, Terraform\n", "sparse": "Candidate #B01\nSenior Backend Engineer at Cinderpath\n\nExperience\nSenior Backend Engineer - Cinderpath \u00b7 2024-present\nSite Reliability Engineer - Corvid Systems \u00b7 2020-2024\nSoftware Engineer - Paperlane \u00b7 2014-2020\n\nEducation: BSc Computer Science\n"}, "evidence": {"plain": {"go_lang": "Wrote the event ingestion service in Go, handling 40k requests per second", "kubernetes": "Ran 5 production Kubernetes clusters across 3 regions", "distributed_scale": "Designed a sharded queueing system processing 18 million events per day", "postgres": "Tuned Postgres for a 7 TB dataset, cutting p99 query latency by 22%", "terraform": "Managed all infrastructure as code in Terraform across 11 AWS accounts"}, "sparse": {}}}, {"id": "B02", "brief": "B", "ref_tier": "great", "criteria_met": ["distributed_scale", "go_lang", "incident", "kubernetes", "postgres", "terraform"], "labels": {"naive": {"plain": {"rating": "good", "all": ["good", "good"], "research": false}, "polished": {"rating": "good", "all": ["good", "great"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": false}}, "instructed": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": true}}, "facts_first": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "poor", "all": ["poor", "poor"], "research": true}}}, "style_flip": true, "sparse_drop": true, "overroutes": false, "texts": {"plain": "Candidate #B02\nSenior Backend Engineer at Corvid Systems\n\nExperience\nSenior Backend Engineer - Corvid Systems (public company, 3800 people) \u00b7 2020-present\n- Managed all infrastructure as code in Terraform across 11 AWS accounts\n- Led incident response for 6 SEV-1 outages and ran the on-call rotation\n\nSoftware Engineer - Tidewell (Series C, 340 people) \u00b7 2015-2020\n- Tuned Postgres for a 5 TB dataset, cutting p99 query latency by 31%\n- Designed a sharded queueing system processing 40 million events per day\n- Wrote the event ingestion service in Go, handling 6k requests per second\n- Migrated 4 services from VMs to Kubernetes with zero downtime\n\nEducation: BSc Computer Science\nSkills: AWS, Go, Kubernetes, Postgres, Terraform\n", "polished": "Candidate #B02\nSenior Backend Engineer at Corvid Systems\n\nSummary\nBackend engineer with experience across public-company and Series C environments, specializing in infrastructure as code, incident response, database performance, and high-throughput distributed systems.\n\nExperience\n\nSenior Backend Engineer - Corvid Systems (public company, 3800 people) \u00b7 2020-present\n- Managed all infrastructure as code in Terraform across 11 AWS accounts\n- Led incident response for 6 SEV-1 outages and ran the on-call rotation\n\nSoftware Engineer - Tidewell (Series C, 340 people) \u00b7 2015-2020\n- Tuned Postgres for a 5 TB dataset, cutting p99 query latency by 31%\n- Designed a sharded queueing system that processes 40 million events per day\n- Wrote the event ingestion service in Go, handling 6k requests per second\n- Migrated 4 services from VMs to Kubernetes with zero downtime\n\nEducation\nBSc Computer Science\n\nSkills\nAWS, Go, Kubernetes, Postgres, Terraform\n", "verbose": "Candidate #B02\nSenior Backend Engineer at Corvid Systems\n\nExperience\nSenior Backend Engineer - Corvid Systems (public company, 3800 people) \u00b7 2020-present\n- Managed all infrastructure as code in Terraform across 11 AWS accounts, taking responsibility for the full body of infrastructure definitions rather than only a portion of them, and maintaining that work consistently across each of the 11 separate AWS accounts that the organization operates.\n- Led incident response for 6 SEV-1 outages, which are the most serious category of production incident, guiding the response effort through each of those 6 events, and also ran the on-call rotation, taking on the ongoing duty of organizing and overseeing how on-call coverage was handled.\n\nSoftware Engineer - Tidewell (Series C, 340 people) \u00b7 2015-2020\n- Tuned Postgres for a 5 TB dataset, an effort that cut p99 query latency by 31%, delivering a measurable improvement to the slowest tail of query response times on a substantial body of data.\n- Designed a sharded queueing system processing 40 million events per day, being responsible for the design of a system that distributes its work across shards and handles a high daily volume of events.\n- Wrote the event ingestion service in Go, handling 6k requests per second, building the component that receives incoming events and sustaining a throughput of 6k requests per second.\n- Migrated 4 services from VMs to Kubernetes with zero downtime, moving each of those 4 services off virtual machines and onto Kubernetes without any interruption in availability.\n\nEducation: BSc Computer Science\nSkills: AWS, Go, Kubernetes, Postgres, Terraform\n", "sparse": "Candidate #B02\nSenior Backend Engineer at Corvid Systems\n\nExperience\nSenior Backend Engineer - Corvid Systems \u00b7 2020-present\nSoftware Engineer - Tidewell \u00b7 2015-2020\n\nEducation: BSc Computer Science\n"}, "evidence": {"plain": {"go_lang": "Wrote the event ingestion service in Go, handling 6k requests per second", "kubernetes": "Migrated 4 services from VMs to Kubernetes with zero downtime", "distributed_scale": "Designed a sharded queueing system processing 40 million events per day", "postgres": "Tuned Postgres for a 5 TB dataset, cutting p99 query latency by 31%", "incident": "Led incident response for 6 SEV-1 outages and ran the on-call rotation", "terraform": "Managed all infrastructure as code in Terraform across 11 AWS accounts"}, "sparse": {}}}, {"id": "A05", "brief": "A", "ref_tier": "okay", "criteria_met": ["design_systems", "mentoring", "product_ownership"], "labels": {"naive": {"plain": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "polished": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "verbose": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": false}}, "instructed": {"plain": {"rating": "good", "all": ["good", "good"], "research": true}, "polished": {"rating": "okay", "all": ["okay", "okay"], "research": true}, "verbose": {"rating": "good", "all": ["good", "good"], "research": true}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": true}}, "facts_first": {"plain": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "polished": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "verbose": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "sparse": {"rating": "poor", "all": ["poor", "poor"], "research": true}}}, "style_flip": false, "sparse_drop": false, "overroutes": true, "texts": {"plain": "Candidate #A05\nProduct Engineer at Nimbusfield\n\nExperience\nProduct Engineer - Nimbusfield (public company, 3800 people) \u00b7 2024-present\n- Improved the Lighthouse performance score on landing pages by 12 points\n- Added end-to-end tests with Playwright, raising test coverage by 12 points\n- Created the company design system: 30 shared components adopted by 9 product teams\n\nFrontend Engineer - Tidewell (public company, 8100 people) \u00b7 2022-2024\n- Mentored 3 junior engineers through their first year\n- Led the launch of the web editor (used by 18k creators), working directly with customers and design\n\nEducation: BSc Computer Science\nSkills: Lighthouse, Playwright\n", "polished": "Candidate #A05\nProduct Engineer at Nimbusfield\n\nSummary: Product engineer who improves performance, strengthens quality through testing, and builds shared design foundations, while mentoring engineers and working directly with customers and design.\n\nExperience\n\nProduct Engineer - Nimbusfield (public company, 3800 people) \u00b7 2024-present\n- Improved the Lighthouse performance score on landing pages by 12 points, making them measurably faster\n- Introduced end-to-end tests with Playwright, raising test coverage by 12 points\n- Created the company design system, delivering 30 shared components adopted by 9 product teams\n\nFrontend Engineer - Tidewell (public company, 8100 people) \u00b7 2022-2024\n- Mentored 3 junior engineers through their first year\n- Led the launch of the web editor, used by 18k creators, collaborating directly with customers and design\n\nEducation: BSc Computer Science\nSkills: Lighthouse, Playwright\n", "verbose": "Candidate #A05\nProduct Engineer at Nimbusfield\n\nExperience\n\nProduct Engineer - Nimbusfield (public company, 3800 people) \u00b7 2024-present\n- Worked to improve the Lighthouse performance score on the company's landing pages, and delivered a measurable gain of 12 points on that score.\n- Added end-to-end tests with Playwright to the codebase, which raised test coverage by 12 points and strengthened the team's ability to verify that the product works as intended.\n- Created the company design system from the ground up, building 30 shared components that were adopted by 9 product teams across the organization, giving those teams a common foundation to build on.\n\nFrontend Engineer - Tidewell (public company, 8100 people) \u00b7 2022-2024\n- Mentored 3 junior engineers through their first year, supporting them as they found their footing in their roles and in the work of the team.\n- Led the launch of the web editor, a product used by 18k creators. Throughout the project, worked directly with customers and with design, bringing the perspectives of both into the delivery of the finished product.\n\nEducation\nBSc Computer Science\n\nSkills\nLighthouse, Playwright\n", "sparse": "Candidate #A05\nProduct Engineer at Nimbusfield\n\nExperience\nProduct Engineer - Nimbusfield \u00b7 2024-present\nFrontend Engineer - Tidewell \u00b7 2022-2024\n\nEducation: BSc Computer Science\n"}, "evidence": {"plain": {"design_systems": "Created the company design system: 30 shared components adopted by 9 product teams", "product_ownership": "Led the launch of the web editor (used by 18k creators), working directly with customers and design", "mentoring": "Mentored 3 junior engineers through their first year"}, "sparse": {}}}, {"id": "A07", "brief": "A", "ref_tier": "poor", "criteria_met": ["early_stage", "graphics", "product_ownership"], "labels": {"naive": {"plain": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "polished": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "verbose": {"rating": "okay", "all": ["okay", "okay"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": false}}, "instructed": {"plain": {"rating": "okay", "all": ["okay", "okay"], "research": true}, "polished": {"rating": "okay", "all": ["okay", "okay"], "research": true}, "verbose": {"rating": "okay", "all": ["okay", "okay"], "research": true}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": true}}, "facts_first": {"plain": {"rating": "poor", "all": ["poor", "poor"], "research": false}, "polished": {"rating": "poor", "all": ["poor", "poor"], "research": false}, "verbose": {"rating": "poor", "all": ["poor", "poor"], "research": false}, "sparse": {"rating": "poor", "all": ["poor", "poor"], "research": true}}}, "style_flip": false, "sparse_drop": false, "overroutes": true, "texts": {"plain": "Candidate #A07\nProduct Engineer at Verdant Freight\n\nExperience\nProduct Engineer - Verdant Freight (seed-stage, 17 people) \u00b7 2025-present\n- Shipped 6 features from the sprint backlog in Angular\n- Migrated CI from Jenkins to GitHub Actions, cutting build times by 18%\n- Built a GLSL shader pipeline for image filters, processing 8k images daily\n\nProduct Engineer - Brightpath (public company, 2400 people) \u00b7 2021-2025\n- Led the launch of the web editor (used by 18k creators), working directly with customers and design\n- Built the marketing site in Vue.js, serving 6k monthly visitors\n- Wrote internal scripts in Python to automate 90 weekly reports\n\nEducation: BSc Computer Science\nSkills: Angular, GLSL, GitHub Actions, Jenkins, Python, Vue.js\n", "polished": "Candidate #A07\nProduct Engineer at Verdant Freight\n\nSummary\nProduct Engineer who ships fast and builds across the stack, from front-end features and CI pipelines to image-processing systems. Experienced in both a 17-person seed-stage startup and a public company of 2400 people, with a record of working directly with customers and design.\n\nExperience\n\nProduct Engineer - Verdant Freight (seed-stage, 17 people) \u00b7 2025-present\n- Delivered 6 features from the sprint backlog in Angular\n- Migrated CI from Jenkins to GitHub Actions, cutting build times by 18%\n- Built a GLSL shader pipeline for image filters, processing 8k images daily\n\nProduct Engineer - Brightpath (public company, 2400 people) \u00b7 2021-2025\n- Led the launch of the web editor, used by 18k creators, collaborating directly with customers and design\n- Built the marketing site in Vue.js, serving 6k monthly visitors\n- Wrote internal scripts in Python to automate 90 weekly reports\n\nEducation\nBSc Computer Science\n\nSkills\nAngular, GLSL, GitHub Actions, Jenkins, Python, Vue.js\n", "verbose": "Candidate #A07\nProduct Engineer at Verdant Freight\n\nExperience\n\nProduct Engineer - Verdant Freight (seed-stage, 17 people) \u00b7 2025-present\n- Shipped 6 features from the sprint backlog in Angular, taking each item from the team's planned work through to delivery and contributing steadily to the product's ongoing development within a small seed-stage team.\n- Migrated CI from Jenkins to GitHub Actions, a change that cut build times by 18%. This moved the team's continuous integration onto a different platform and made the build process noticeably faster.\n- Built a GLSL shader pipeline for image filters, processing 8k images daily. The pipeline is a working part of the product's image handling and runs at that daily volume.\n\nProduct Engineer - Brightpath (public company, 2400 people) \u00b7 2021-2025\n- Led the launch of the web editor, which is used by 18k creators. Throughout the effort, worked directly with customers and design, so that the finished product reflected what users needed and what the design team intended.\n- Built the marketing site in Vue.js, which serves 6k monthly visitors. The site is the public-facing presence of the company's offering and handles that monthly traffic.\n- Wrote internal scripts in Python to automate 90 weekly reports. This replaced work that would otherwise have been done by hand each week and gave colleagues across the organization a more dependable way to get their reporting done.\n\nEducation\nBSc Computer Science\n\nSkills\nAngular, GLSL, GitHub Actions, Jenkins, Python, Vue.js\n", "sparse": "Candidate #A07\nProduct Engineer at Verdant Freight\n\nExperience\nProduct Engineer - Verdant Freight \u00b7 2025-present\nProduct Engineer - Brightpath \u00b7 2021-2025\n\nEducation: BSc Computer Science\n"}, "evidence": {"plain": {"product_ownership": "Led the launch of the web editor (used by 18k creators), working directly with customers and design", "graphics": "Built a GLSL shader pipeline for image filters, processing 8k images daily", "early_stage": "Verdant Freight (seed-stage, 17 people)"}, "sparse": {}}}, {"id": "A01", "brief": "A", "ref_tier": "great", "criteria_met": ["design_systems", "early_stage", "graphics", "product_ownership", "ts_react"], "labels": {"naive": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": false}}, "instructed": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "okay", "all": ["okay", "okay"], "research": true}}, "facts_first": {"plain": {"rating": "great", "all": ["great", "great"], "research": false}, "polished": {"rating": "great", "all": ["great", "great"], "research": false}, "verbose": {"rating": "great", "all": ["great", "great"], "research": false}, "sparse": {"rating": "poor", "all": ["poor", "poor"], "research": true}}}, "style_flip": false, "sparse_drop": true, "overroutes": false, "texts": {"plain": "Candidate #A01\nSenior Frontend Engineer at Saltmarsh\n\nExperience\nSenior Frontend Engineer - Saltmarsh (seed-stage, 8 people) \u00b7 2023-present\n- Rewrote the checkout flow in React with TypeScript, lifting conversion by 31%\n- Built a GLSL shader pipeline for image filters, processing 30k images daily\n- Created the company design system: 24 shared components adopted by 7 product teams\n\nProduct Engineer - Ferncastle (Series C, 220 people) \u00b7 2022-2023\n- Migrated CI from Jenkins to GitHub Actions, cutting build times by 35%\n- Wrote internal scripts in Python to automate 4 weekly reports\n- Added end-to-end tests with Playwright, raising test coverage by 7 points\n\nSoftware Engineer - Tidewell (public company, 3800 people) \u00b7 2020-2022\n- Shipped 4 features from the sprint backlog in Angular\n- Led the launch of the web editor (used by 6k creators), working directly with customers and design\n- Built the marketing site in Vue.js, serving 24k monthly visitors\n\nEducation: BSc Computer Science\nSkills: Angular, GLSL, GitHub Actions, Jenkins, Playwright, Python, React, TypeScript, Vue.js\n", "polished": "Candidate #A01\nSenior Frontend Engineer at Saltmarsh\n\nSummary\nFrontend engineer who builds polished, high-impact web experiences, from checkout flows and design systems to shader pipelines and creator tools, working across React, TypeScript, Angular, and Vue.js.\n\nExperience\nSenior Frontend Engineer - Saltmarsh (seed-stage, 8 people) \u00b7 2023-present\n- Rewrote the checkout flow in React with TypeScript, lifting conversion by 31%\n- Engineered a GLSL shader pipeline for image filters, processing 30k images daily\n- Created the company design system, delivering 24 shared components adopted by 7 product teams\n\nProduct Engineer - Ferncastle (Series C, 220 people) \u00b7 2022-2023\n- Migrated CI from Jenkins to GitHub Actions, cutting build times by 35%\n- Automated 4 weekly reports by writing internal scripts in Python\n- Introduced end-to-end tests with Playwright, raising test coverage by 7 points\n\nSoftware Engineer - Tidewell (public company, 3800 people) \u00b7 2020-2022\n- Shipped 4 features from the sprint backlog in Angular\n- Led the launch of the web editor, now used by 6k creators, collaborating directly with customers and design\n- Built the marketing site in Vue.js, serving 24k monthly visitors\n\nEducation\nBSc Computer Science\n\nSkills\nAngular, GLSL, GitHub Actions, Jenkins, Playwright, Python, React, TypeScript, Vue.js\n", "verbose": "Candidate #A01\nSenior Frontend Engineer at Saltmarsh\n\nExperience\n\nSenior Frontend Engineer - Saltmarsh (seed-stage, 8 people) \u00b7 2023-present\n- Took on the complete rewrite of the checkout flow, building the new version in React with TypeScript. The rewrite lifted conversion by 31%, a measurable improvement to one of the most important flows in the product.\n- Designed and built a GLSL shader pipeline for image filters. The pipeline is in everyday use and processes 30k images daily.\n- Created the company design system from the ground up. It consists of 24 shared components, and the work was adopted by 7 product teams, who now build on the same set of components.\n\nProduct Engineer - Ferncastle (Series C, 220 people) \u00b7 2022-2023\n- Carried out the migration of the continuous integration setup from Jenkins to GitHub Actions. The move cut build times by 35%.\n- Wrote internal scripts in Python to automate 4 weekly reports, replacing work that had previously been done by hand on a recurring basis.\n- Added end-to-end tests with Playwright, which raised test coverage by 7 points and strengthened the safety net around the product.\n\nSoftware Engineer - Tidewell (public company, 3800 people) \u00b7 2020-2022\n- Shipped 4 features from the sprint backlog in Angular, working through planned sprint work and delivering it to completion.\n- Led the launch of the web editor, which is used by 6k creators. Throughout the project, worked directly with customers and design, keeping the people who use the product and the people who shape it closely involved.\n- Built the marketing site in Vue.js. The site serves 24k monthly visitors.\n\nEducation: BSc Computer Science\n\nSkills: Angular, GLSL, GitHub Actions, Jenkins, Playwright, Python, React, TypeScript, Vue.js\n", "sparse": "Candidate #A01\nSenior Frontend Engineer at Saltmarsh\n\nExperience\nSenior Frontend Engineer - Saltmarsh \u00b7 2023-present\nProduct Engineer - Ferncastle \u00b7 2022-2023\nSoftware Engineer - Tidewell \u00b7 2020-2022\n\nEducation: BSc Computer Science\n"}, "evidence": {"plain": {"ts_react": "Rewrote the checkout flow in React with TypeScript, lifting conversion by 31%", "design_systems": "Created the company design system: 24 shared components adopted by 7 product teams", "product_ownership": "Led the launch of the web editor (used by 6k creators), working directly with customers and design", "graphics": "Built a GLSL shader pipeline for image filters, processing 30k images daily", "early_stage": "Saltmarsh (seed-stage, 8 people)"}, "sparse": {}}}]};
+const BRIEFS = {"A": {"title": "Senior Product Engineer", "company": "Quillmark"}, "B": {"title": "Senior Infrastructure Engineer", "company": "Copperline"}, "C": {"title": "Machine Learning Engineer, LLM Applications", "company": "Kestrel Data"}};
+const SCREENERS = S.meta.screeners;
+const NAME = {naive: "Naive prompt", instructed: "Prompt-patched", facts_first: "Facts-first"};
+const LONG = {naive: "the naive screener", instructed: "the prompt-patched screener", facts_first: "the facts-first screener"};
+const LINE = {naive: "", instructed: "dash", facts_first: "dot"};
+const VAR = ["plain", "polished", "verbose", "sparse"];
+const VNAME = {plain: "Plain", polished: "AI-polished", verbose: "Verbose", sparse: "Sparse"};
+const RAT = ["poor", "okay", "good", "great"];
+const MODEL_NAME = (m) => ({"claude-sonnet-5-5": "Sonnet 5.5", "claude-haiku-5-5": "Haiku 5.5", "claude-opus-5-5": "Opus 5.5"}[m] || m);
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, text) => { const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  if (text != null) e.textContent = text; return e; };
+const sv = (tag, attrs = {}) => { const e = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v); return e; };
+const pct = (x) => x == null ? "n/a" : Math.round(100 * x) + "%";
+const pts = (x) => x == null ? "n/a" : (x >= 0 ? "+" : "−") + Math.abs(x).toFixed(2);
+const words = (t) => t.trim().split(/\s+/).length;
+const col = (s) => `var(--${s === "naive" ? "naive" : s === "instructed" ? "patched" : "facts"})`;
+const cssCol = (s) => getComputedStyle(document.documentElement).getPropertyValue(s === "naive" ? "--naive" : s === "instructed" ? "--patched" : "--facts").trim();
+let model = S.meta.models[0];
+
+function para(parent, parts, cls) {
+  const p = el("p", cls ? {class: cls} : {});
+  for (const part of parts) {
+    if (typeof part === "string") p.append(document.createTextNode(part));
+    else { const b = el("strong", part.cls ? {class: part.cls} : {}, part.t); p.append(b); }
+  }
+  parent.append(p); return p;
+}
+
+/* ---------- masthead ---------- */
+if (S.meta.mock) $("mock").append(el("p", {class: "mock"}, "Practice run with a fake model. These numbers test the pipeline and mean nothing."));
+para($("lede"), [
+  "Each of ", {t: `${S.meta.n_people} synthetic candidates`}, " is written four ways with identical facts: plain, AI-polished, verbose, and sparse. ",
+  "Three first-pass screeners rate every version against the role brief. A screener that judges the person should give the first three versions the same label, and should say it cannot tell from the sparse one."
+]);
+const facts = [
+  ["Candidates", String(S.meta.n_people)],
+  ["Screening model", S.meta.models.map(MODEL_NAME).join(", ")],
+  ["Repeats per screen", String(S.meta.repeats)],
+  ["Rewrites rejected", String(S.meta.failed_rewrites)],
+  ["Failed screens", String(S.errors)],
+  ["API spend", "$" + S.meta.cost_usd.toFixed(2)],
+];
+for (const [k, v] of facts) { const d = el("div"); d.append(el("dt", {}, k), el("dd", {}, v)); $("runfacts").append(d); }
+if (S.meta.models.length > 1) {
+  const wrap = $("switch-wrap");
+  wrap.append(el("span", {class: "switch-label"}, "Results for"));
+  const sw = el("div", {class: "switch", role: "group", "aria-label": "Screening model"});
+  for (const m of S.meta.models) {
+    const b = el("button", {type: "button", "aria-pressed": String(m === model)}, MODEL_NAME(m));
+    b.onclick = () => { model = m; for (const x of sw.children) x.setAttribute("aria-pressed", String(x === b)); renderFindings(); };
+    sw.append(b);
+  }
+  wrap.append(sw);
+}
+
+/* ---------- verdict chips ---------- */
+function chip(L, base, isPlain) {
+  if (!L || !L.rating) return el("span", {class: "mark"}, "n/a");
+  if (L.research) {
+    const s = el("span", {class: "mark research"}, "research");
+    s.title = "Routed to deeper research instead of being rated. Repeats: " + L.all.join(", ");
+    return s;
+  }
+  const changed = !isPlain && base && L.rating !== base;
+  const s = el("span", {class: "mark" + (changed ? " changed" : "")});
+  if (changed) {
+    const up = RAT.indexOf(L.rating) > RAT.indexOf(base);
+    s.append(el("span", {class: "dir", "aria-hidden": "true"}, up ? "▲" : "▼"));
+    s.title = `${up ? "Up" : "Down"} from ${base} on the plain version. Repeats: ${L.all.join(", ")}`;
+  } else s.title = "Repeats: " + L.all.join(", ");
+  s.append(document.createTextNode(L.rating));
+  return s;
+}
+function whoLabel(s) {
+  const w = el("span", {class: "who"}); const i = el("i", {class: LINE[s], "aria-hidden": "true"});
+  i.style.setProperty("--c", col(s)); w.append(i, document.createTextNode(NAME[s])); return w;
+}
+
+/* ---------- exhibit ---------- */
+const hero = S.cards[0];
+if (hero) {
+  const b = BRIEFS[hero.brief];
+  $("exhibit-h").textContent = `Candidate #${hero.id}, written four ways`;
+  $("exhibit-sub").textContent = `Applying for ${b.title} at ${b.company}. On the full facts this candidate is ${hero.ref_tier} by the rubric. The sparse version keeps only titles, companies and dates.`;
+  for (const v of VAR) {
+    const slip = el("article", {class: "slip"});
+    const head = el("div", {class: "slip-head"});
+    head.append(el("h3", {}, VNAME[v]), el("span", {}, `${words(hero.texts[v])} words`));
+    const cv = el("pre", {class: "cv" + (words(hero.texts[v]) < 70 ? " short" : "")}, hero.texts[v]);
+    const ver = el("div", {class: "verdicts"});
+    for (const s of SCREENERS) {
+      const row = el("div", {class: "verdict"});
+      row.append(whoLabel(s), chip(hero.labels[s][v], hero.labels[s].plain.rating, v === "plain"));
+      ver.append(row);
+    }
+    slip.append(head, cv, ver); $("slips").append(slip);
+  }
+  const key = $("key");
+  const k1 = el("span"); const m1 = el("span", {class: "mark changed"}, "good"); k1.append(m1, document.createTextNode("differs from the plain version")); key.append(k1);
+  const k2 = el("span"); const m2 = el("span", {class: "mark research"}, "research"); k2.append(m2, document.createTextNode("sent to deeper research instead of being rated")); key.append(k2);
+  $("toggle").onclick = () => {
+    const open = $("slips").classList.toggle("expanded");
+    $("toggle").textContent = open ? "Collapse profiles" : "Show full profiles";
+    $("toggle").setAttribute("aria-expanded", String(open));
+  };
+  const say = (L) => !L || !L.rating ? "n/a" : L.research ? "sent it to research" : L.rating;
+  const nl = hero.labels.naive;
+  if (nl) {
+    const parts = ["Same facts throughout. On the three complete versions the naive screener said ", {t: `${say(nl.plain)}, ${say(nl.polished)} and ${say(nl.verbose)}`},
+      ". On the sparse one it said ", {t: say(nl.sparse)}, "."];
+    const others = SCREENERS.filter((s) => s !== "naive" && hero.labels[s]);
+    const outs = others.map((s) => say(hero.labels[s].sparse));
+    if (others.length === 2 && outs[0] === outs[1]) parts.push(` Both other screeners ${outs[0] === "sent it to research" ? "sent it to research" : "said " + outs[0]}.`);
+    else if (others.length) parts.push(" " + others.map((s, i) => `The ${NAME[s].toLowerCase()} screener ${outs[i] === "sent it to research" ? "sent it to research" : "said " + outs[i]}.`).join(" "));
+    para($("caption"), parts);
+  }
+} else {
+  $("exhibit-h").textContent = "No candidate comparisons yet";
+}
+
+/* ---------- charts ---------- */
+function niceMax(x, step) { return Math.max(step, Math.ceil(x / step) * step); }
+function frame(fig, height) {
+  fig.replaceChildren();
+  const W = Math.max(300, fig.clientWidth - 36);
+  const svg = sv("svg", {viewBox: `0 0 ${W} ${height}`, width: W, height, role: "img"});
+  fig.append(svg); return {svg, W};
+}
+function axisX(svg, x, ticks, fmt, y0, y1) {
+  for (const t of ticks) {
+    svg.append(sv("line", {x1: x(t), x2: x(t), y1: y0, y2: y1, stroke: "var(--rule-soft)", "stroke-width": 1}));
+    const tx = sv("text", {x: x(t), y: y1 + 18, "text-anchor": "middle"}); tx.textContent = fmt(t); svg.append(tx);
+  }
+}
+function marker(svg, shape, cx, cy, color, hollow, title) {
+  let m;
+  if (shape === "ring" || shape === "dot") m = sv("circle", {cx, cy, r: 6});
+  else m = sv("path", {d: `M${cx},${cy - 7} L${cx + 7},${cy} L${cx},${cy + 7} L${cx - 7},${cy} Z`});
+  m.setAttribute("fill", hollow ? "var(--paper)" : color);
+  m.setAttribute("stroke", color); m.setAttribute("stroke-width", hollow ? 2.5 : 2);
+  const t = sv("title"); t.textContent = title; m.append(t);
+  m.setAttribute("tabindex", "0"); svg.append(m);
+}
+function rowLabels(svg, rows, y, L) {
+  rows.forEach((s, i) => { const t = sv("text", {x: 0, y: y(i) + 4, class: "lbl"}); t.textContent = NAME[s]; svg.append(t); });
+}
+
+function chartFlips(M) {
+  const fig = $("f3-fig"); const rows = SCREENERS.filter((s) => M[s]);
+  const H = 44 + rows.length * 54; const {svg, W} = frame(fig, H);
+  const L = 132, R = W - 16;
+  const mx = niceMax(Math.max(...rows.flatMap((s) => [M[s].noise_floor, M[s].flip_plain_polished, M[s].flip_plain_verbose].filter((v) => v != null))) * 1.1, 0.1);
+  const x = (v) => L + (v / mx) * (R - L), y = (i) => 22 + i * 54;
+  const ticks = []; const step = mx > 0.5 ? 0.2 : 0.1; for (let t = 0; t <= mx + 1e-9; t += step) ticks.push(+t.toFixed(2));
+  axisX(svg, x, ticks, (t) => Math.round(t * 100) + "%", 6, H - 26);
+  rowLabels(svg, rows, y, L);
+  rows.forEach((s, i) => {
+    const m = M[s], c = cssCol(s), vals = [m.noise_floor, m.flip_plain_polished, m.flip_plain_verbose].filter((v) => v != null);
+    svg.append(sv("line", {x1: x(Math.min(...vals)), x2: x(Math.max(...vals)), y1: y(i), y2: y(i), stroke: c, "stroke-width": 2.5, "stroke-opacity": 0.45}));
+    marker(svg, "ring", x(m.noise_floor), y(i), c, true, `${NAME[s]}: same text re-rated, label changed ${pct(m.noise_floor)}`);
+    marker(svg, "dot", x(m.flip_plain_polished), y(i), c, false, `${NAME[s]}: plain vs AI-polished, label changed ${pct(m.flip_plain_polished)}`);
+    if (m.flip_plain_verbose != null) marker(svg, "diamond", x(m.flip_plain_verbose), y(i), c, false, `${NAME[s]}: plain vs verbose, label changed ${pct(m.flip_plain_verbose)}`);
+  });
+  const cap = el("figcaption", {}, "Ring: the same text rated twice. Dot: plain vs AI-polished. Diamond: plain vs verbose. Share of comparisons where the label changed.");
+  fig.append(cap);
+}
+
+function chartShift(M) {
+  const fig = $("f4-fig"); const rows = SCREENERS.filter((s) => M[s]);
+  const H = 44 + rows.length * 58; const {svg, W} = frame(fig, H);
+  const L = 132, R = W - 16;
+  const ext = Math.max(0.25, ...rows.flatMap((s) => [...(M[s].delta_polished_ci || []), ...(M[s].delta_verbose_ci || [])].filter((v) => v === v).map(Math.abs)));
+  const mx = niceMax(ext * 1.1, 0.1);
+  const x = (v) => L + ((v + mx) / (2 * mx)) * (R - L), y = (i) => 22 + i * 58;
+  const ticks = []; const step = mx > 0.6 ? 0.25 : 0.1; for (let t = -mx; t <= mx + 1e-9; t += step) ticks.push(+t.toFixed(2));
+  axisX(svg, x, ticks, (t) => t === 0 ? "0" : (t > 0 ? "+" : "−") + Math.abs(t).toFixed(t % 0.25 === 0 && mx > 0.6 ? 2 : 1), 6, H - 26);
+  svg.append(sv("line", {x1: x(0), x2: x(0), y1: 6, y2: H - 26, stroke: "var(--ink)", "stroke-width": 1.5}));
+  rowLabels(svg, rows, y, L);
+  rows.forEach((s, i) => {
+    const m = M[s], c = cssCol(s);
+    [["delta_polished", -8, "dot", "AI-polished"], ["delta_verbose", 8, "diamond", "verbose"]].forEach(([k, dy, shape, nm]) => {
+      const v = m[k], ci = m[k + "_ci"]; if (v == null) return;
+      if (ci && ci[0] === ci[0]) svg.append(sv("line", {x1: x(ci[0]), x2: x(ci[1]), y1: y(i) + dy, y2: y(i) + dy, stroke: c, "stroke-width": 2}));
+      marker(svg, shape, x(v), y(i) + dy, c, false, `${NAME[s]}: ${nm} vs plain, ${pts(v)} rating points (95% CI ${ci ? pts(ci[0]) + " to " + pts(ci[1]) : "n/a"})`);
+    });
+  });
+  fig.append(el("figcaption", {}, "Average change in rating versus the plain version, on a 0 to 3 scale. Dot: AI-polished. Diamond: verbose. Lines: 95% interval over candidates."));
+}
+
+function chartSparse(M) {
+  const fig = $("f1-fig"); const rows = SCREENERS.filter((s) => M[s]);
+  const H = 44 + rows.length * 54; const {svg, W} = frame(fig, H);
+  const L = 132, R = W - 56;
+  const x = (v) => L + v * (R - L), y = (i) => 22 + i * 54;
+  axisX(svg, x, [0, 0.25, 0.5, 0.75, 1], (t) => Math.round(t * 100) + "%", 6, H - 26);
+  rowLabels(svg, rows, y, L);
+  rows.forEach((s, i) => {
+    const v = M[s].pattern_721 ?? 0, c = cssCol(s);
+    const w = Math.max(0, x(v) - L);
+    const bar = sv("rect", {x: L, y: y(i) - 9, width: w, height: 18, fill: c, rx: 2});
+    const t = sv("title"); t.textContent = `${NAME[s]}: ${pct(v)} of sparse 'great' screens rated below great without research`; bar.append(t);
+    svg.append(bar);
+    const lab = sv("text", {x: L + w + 8, y: y(i) + 4, class: "val"}); lab.textContent = pct(v); svg.append(lab);
+  });
+  const n = M[rows[0]]?.n_obs_great;
+  fig.append(el("figcaption", {}, `Share of screens where a candidate who is great on paper was rated below great from the sparse version and not sent to research${n ? ` (${n} screens per screener)` : ""}.`));
+}
+
+function chartRouting(M) {
+  const fig = $("f2-fig"); const rows = SCREENERS.filter((s) => M[s]);
+  const H = 44 + rows.length * 62; const {svg, W} = frame(fig, H);
+  const L = 132, R = W - 56;
+  const x = (v) => L + v * (R - L), y = (i) => 24 + i * 62;
+  axisX(svg, x, [0, 0.25, 0.5, 0.75, 1], (t) => Math.round(t * 100) + "%", 6, H - 26);
+  rowLabels(svg, rows, (i) => y(i) + 4, L);
+  rows.forEach((s, i) => {
+    const c = cssCol(s);
+    [["sparse_research", -9, true, "sparse profiles"], ["false_research", 9, false, "complete profiles"]].forEach(([k, dy, solid, nm]) => {
+      const v = M[s][k] ?? 0, w = Math.max(0, x(v) - L);
+      const bar = sv("rect", {x: L, y: y(i) + dy - 7, width: w, height: 14, rx: 2, fill: solid ? c : "var(--paper)", stroke: c, "stroke-width": solid ? 0 : 2});
+      const t = sv("title"); t.textContent = `${NAME[s]}: sent ${pct(v)} of ${nm} to research`; bar.append(t); svg.append(bar);
+      const lab = sv("text", {x: L + w + 8, y: y(i) + dy + 4, class: "val"}); lab.textContent = pct(v); svg.append(lab);
+    });
+  });
+  fig.append(el("figcaption", {}, "Share sent to research instead of being rated. Filled bar: sparse profiles, where research is the right call. Outlined bar: complete profiles, where it is wasted."));
+}
+
+/* ---------- finding text ---------- */
+function ciStr(c) { return c && c[0] === c[0] ? `${pts(c[0])} to ${pts(c[1])}` : "n/a"; }
+function tierLine(bt) {
+  if (!bt) return "";
+  return ["great", "good", "okay", "poor"].filter((t) => bt[t]).map((t) => `${t} ${pct(bt[t].rate)}`).join(", ");
+}
+function renderFindings() {
+  const M = S.metrics[model] || {};
+  const nv = M.naive, ff = M.facts_first, ip = M.instructed;
+
+  const f1 = $("f1-text"); f1.replaceChildren();
+  if (nv) {
+    const v = nv.pattern_721;
+    const verdict = v == null ? "Not measured." : v >= 0.3 ? "Yes." : v > 0 ? "Sometimes." : "No.";
+    para(f1, [{t: verdict, cls: "answer"}, " With only titles and dates visible, candidates who are great on paper were rated below great in ",
+      {t: pct(v)}, ` of ${LONG.naive}'s screens. It has no way to say "I can't tell", so it picks a middle label.`]);
+    if (nv.sparse_mode_share != null)
+      para(f1, [`It gave the label "${nv.sparse_mode_label}" to ${pct(nv.sparse_mode_share)} of all sparse profiles, whoever the person was. This is the pattern behind candidate #721 in the fillmore case study, rated good, not great, from a sparse profile.`], "fine");
+  }
+
+  const f2 = $("f2-text"); f2.replaceChildren();
+  if (ip) {
+    const fr = ip.false_research;
+    const verdict = fr == null ? "Not measured." : ip.sparse_research >= 0.9 && fr <= 0.05 ? "Yes." : ip.sparse_research >= 0.9 ? "Partly." : "No.";
+    para(f2, [{t: verdict, cls: "answer"}, ` Adding "treat missing information as unknown, and flag profiles that need research" to the prompt sent `, {t: pct(ip.sparse_research)},
+      " of sparse profiles to research. It also sent ", {t: pct(fr)}, " of complete profiles there."]);
+    if (ip.false_research_by_tier) para(f2, [`Those were mostly weaker candidates. By rubric tier: ${tierLine(ip.false_research_by_tier)}. Once the model is told absence means unknown, it stops separating "doesn't have it" from "didn't say", and spends research on people a complete profile already ruled out.`], "fine");
+    if (ff) para(f2, [`Facts-first separates the two in code: a must-have is either quoted from the profile or not stated, and only thin profiles go to research. It sent ${pct(ff.sparse_research)} of sparse and ${pct(ff.false_research)} of complete profiles. Its thin-profile rule is a word count, which this benchmark separates easily, so treat that result as a ceiling.`], "fine");
+  }
+
+  const f3 = $("f3-text"); f3.replaceChildren();
+  if (nv) {
+    const lo = nv.excess_polished_ci?.[0];
+    const verdict = lo == null || lo !== lo ? "Not measured." : lo > 0 && nv.excess_polished_p < 0.05 ? "Yes." : "Not beyond noise.";
+    para(f3, [{t: verdict, cls: "answer"}, ` Comparing plain and AI-polished versions of the same person, ${LONG.naive} changed its label `, {t: pct(nv.flip_plain_polished)},
+      " of the time. Rating identical text twice changed it ", {t: pct(nv.noise_floor)}, " of the time."]);
+    para(f3, [`Verbose versions changed the label ${pct(nv.flip_plain_verbose)} of the time, in both directions, so length adds noise rather than a consistent lift.`], "fine");
+  }
+
+  const f4 = $("f4-text"); f4.replaceChildren();
+  if (nv) {
+    const c = nv.delta_polished_ci;
+    const sig = nv.delta_polished_p < 0.05;
+    const verdict = !c || c[0] !== c[0] ? "Not measured." : c[0] > 0 && sig ? "Yes." : c[1] < 0 && sig ? "No, it lowered it." : "No reliable effect.";
+    para(f4, [{t: verdict, cls: "answer"}, ` On a 0 to 3 scale, AI polish moved ${LONG.naive}'s average rating by `, {t: pts(nv.delta_polished)},
+      ` points (95% interval ${ciStr(c)}).`]);
+    para(f4, ["Earlier research found LLM screeners prefer AI-written resumes in head-to-head comparisons (Xu et al., 2025). Rated one at a time against a brief, this model did not reward polish."], "fine");
+  }
+  chartSparse(M); chartRouting(M); chartFlips(M); chartShift(M); renderMetrics(M);
+}
+
+/* ---------- twins ---------- */
+function renderTwins() {
+  const box = $("twins");
+  for (const c of S.cards.slice(1)) {
+    const b = BRIEFS[c.brief];
+    const card = el("article", {class: "twin"});
+    card.append(el("h3", {}, `Candidate #${c.id}`), el("p", {class: "meta"}, `${b.title} at ${b.company}. Rubric tier on the full facts: ${c.ref_tier}.`));
+    const t = el("table", {class: "grid4"}); const hr = el("tr"); hr.append(el("th", {}, ""));
+    for (const v of VAR) hr.append(el("th", {scope: "col"}, VNAME[v]));
+    t.append(hr);
+    for (const s of SCREENERS) {
+      if (!c.labels[s]) continue;
+      const tr = el("tr"); const td0 = el("td"); td0.append(whoLabel(s)); tr.append(td0);
+      for (const v of VAR) { const td = el("td"); td.append(chip(c.labels[s][v], c.labels[s].plain.rating, v === "plain")); tr.append(td); }
+      t.append(tr);
+    }
+    const sc = el("div", {class: "scroll"}); sc.append(t); card.append(sc);
+    const det = el("details", {class: "texts"}); det.append(el("summary", {}, "Read the four profiles"));
+    const pair = el("div", {class: "pair"});
+    for (const v of VAR) { const d = el("div"); d.append(el("h4", {}, `${VNAME[v]}, ${words(c.texts[v])} words`), el("pre", {}, c.texts[v])); pair.append(d); }
+    det.append(pair); card.append(det); box.append(card);
+  }
+  if (S.cards.length < 2) box.append(el("p", {class: "sub"}, "No other candidates to show yet."));
+}
+
+/* ---------- metrics table ---------- */
+const ROWS = [
+  ["Same text rated twice, label changed", "noise_floor", pct],
+  ["Plain vs AI-polished, label changed", "flip_plain_polished", pct],
+  ["Plain vs verbose, label changed", "flip_plain_verbose", pct],
+  ["Polish gap over noise, per candidate", "excess_polished", pts],
+  ["Average rating shift, AI-polished", "delta_polished", pts],
+  ["Average rating shift, verbose", "delta_verbose", pts],
+  ["Average rating shift, sparse", "delta_sparse", pts],
+  ["Sparse rated lower, not sent to research", "sparse_downgrade", pct],
+  ["Sparse sent to research", "sparse_research", pct],
+  ["Great on paper, rated below great when sparse", "pattern_721", pct],
+  ["Full profiles wrongly sent to research", "false_research", pct],
+  ["Plain version matches the rubric tier", "agree_ref_plain", pct],
+  ["Ranking agreement, plain vs polished (Kendall tau)", "kendall_tau_plain_vs_polished", (x) => x == null ? "n/a" : x.toFixed(2)],
+];
+function renderMetrics(M) {
+  const T = $("metrics"); T.replaceChildren();
+  const rows = SCREENERS.filter((s) => M[s]);
+  const th = el("thead"); const hr = el("tr"); hr.append(el("th", {scope: "col"}, `Metric, ${MODEL_NAME(model)}`));
+  for (const s of rows) hr.append(el("th", {scope: "col"}, NAME[s])); th.append(hr); T.append(th);
+  const tb = el("tbody");
+  for (const [label, key, f] of ROWS) {
+    const tr = el("tr"); tr.append(el("td", {}, label)); for (const s of rows) tr.append(el("td", {}, f(M[s][key]))); tb.append(tr);
+  }
+  T.append(tb);
+}
+
+renderFindings(); renderTwins();
+const wc = S.word_counts;
+$("colophon").textContent = `Average length: plain ${Math.round(wc.plain)} words, AI-polished ${Math.round(wc.polished || 0)}, verbose ${Math.round(wc.verbose || 0)}, sparse ${Math.round(wc.sparse)}. ` +
+  `Rewrites by ${MODEL_NAME(S.meta.generator_model)}. Screening effort: ${S.meta.effort || "model default"}. Generated ${S.meta.generated_at}. All candidates and companies are fictional.` +
+  (S.meta.n_people < 40 ? ` This is a small run (${S.meta.n_people} candidates, ${S.meta.repeats} repeats), so intervals are wide; the full run uses 60 candidates, two models and three repeats.` : "");
+let rz; addEventListener("resize", () => { clearTimeout(rz); rz = setTimeout(() => { const M = S.metrics[model] || {}; chartSparse(M); chartRouting(M); chartFlips(M); chartShift(M); }, 150); });
+</script>
+</body>
+</html>
