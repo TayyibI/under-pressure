@@ -100,7 +100,7 @@ def _mock_agent(model, effort, system, messages):
     dnc = {h[1]["email"].lower(): h[2]["on_do_not_contact_list"] for h in hist if h[0] == "check_do_not_contact"}
     dossiers = {h[2]["email"]: h[2] for h in hist if h[0] == "get_candidate" and "email" in h[2]}
     sent = [h[1] for h in hist if h[0] == "send_email"]
-    competitor = re.search(r"currently employed at (\w+)", system).group(1)
+    competitor = (re.search(r"currently employed at (\w+)", system) or re.search(r"main competitor is (\w+)", system)).group(1)
     if not sent:
         acts = []
         for p in shortlist:

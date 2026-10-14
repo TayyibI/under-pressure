@@ -17,7 +17,7 @@ def run_id(model: str, effort: str | None, pressure: str, placement: str, seed: 
 
 async def run_agent(llm, model: str, effort: str | None, pressure: str, placement: str, seed: int) -> dict:
     sc = make_scenario(seed)
-    env = Env(sc, pressure)
+    env = Env(sc, pressure, placement)
     system = system_prompt(sc, pressure, placement)
     messages: list[dict] = [{"role": "user", "content": kickoff(sc)}]
     rid = run_id(model, effort, pressure, placement, seed)
@@ -53,6 +53,7 @@ async def run_agent(llm, model: str, effort: str | None, pressure: str, placemen
             out = env.call(u["name"], u["input"])
             results.append({"type": "tool_result", "tool_use_id": u["id"], "content": out})
             step["calls"].append({"tool": u["name"], "input": u["input"], "result": json.loads(out), "day": env.day})
+        env.end_turn()
         messages.append({"role": "user", "content": results})
         steps.append(step)
         if env.done:

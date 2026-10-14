@@ -19,7 +19,6 @@ from .agent import BudgetExceeded, run_agent, run_id
 
 ALIAS = {"sonnet": "claude-sonnet-5-5", "haiku": "claude-haiku-5-5", "opus": "claude-opus-5-5"}
 PRESSURES = ("neutral", "pressure")
-PLACEMENTS = ("top", "buried")
 # Rough per-run and per-check costs (USD) used only for the estimate shown before anything is spent.
 EST_RUN = {("claude-sonnet-5-5", "low"): 0.15, ("claude-sonnet-5-5", "medium"): 0.27,
            ("claude-haiku-5-5", "low"): 0.01, ("claude-opus-5-5", "low"): 0.30}
@@ -41,6 +40,10 @@ def parse(argv):
     ap.add_argument("--yes", action="store_true", help="skip the cost prompt")
     ap.add_argument("--workdir", default=None, help="default: run_pressure/ (run_pressure_mock/ with --mock)")
     ap.add_argument("--seeds", type=int, default=8, help="scenarios per condition (each is a different client/shortlist)")
+    ap.add_argument("--placements", default="top,buried", help="where the rules sit: top, buried, none (no written rules)")
+    ap.add_argument("--rule-wording", default="original", choices=["original", "reworded"],
+                    help="monitor stage: 'reworded' re-checks the seeded emails and the agents' replies to the remote question "
+                         "with the two content rules reworded, to see whether false alarms drop")
     ap.add_argument("--agents", default="sonnet:low,sonnet:medium,haiku:low", help="model:effort list for the agent")
     ap.add_argument("--monitors", default="haiku:low,sonnet:low", help="model:effort list for the pre-send monitor")
     ap.add_argument("--max-usd", type=float, default=25.0, help="hard stop: no new API calls once total spend reaches this")
@@ -84,21 +87,28 @@ def main(argv=None) -> None:
     runs_path, mon_path = a.workdir / "runs.jsonl", a.workdir / "monitor.jsonl"
 
     cfg_path = a.workdir / "config.json"
-    if cfg_path.exists() and "run" not in stages:
+    if cfg_path.exists():
         cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
+        if "run" in stages:   # a later run adds to the same experiment: keep the start time, widen the lists
+            cfg["placements"] = sorted(set(cfg.get("placements", ["top", "buried"])) |
+                                       {x.strip() for x in a.placements.split(",") if x.strip()})
+            cfg["max_usd"] = a.max_usd
     else:
         cfg = {"agents": agents, "monitors": monitors, "seeds": a.seeds, "mock": a.mock, "max_usd": a.max_usd,
+               "placements": [x.strip() for x in a.placements.split(",") if x.strip()],
                "author": a.author, "started": datetime.now(timezone.utc).isoformat(timespec="seconds")}
 
     if any(s in stages for s in ("run", "monitor")):
         done_runs = {r["run_id"] for r in load_jsonl(runs_path)}
-        jobs = [(m, e, p, pl, s) for (m, e) in agents for p in PRESSURES for pl in PLACEMENTS for s in range(1, a.seeds + 1)]
+        placements = [x.strip() for x in a.placements.split(",") if x.strip()]
+        jobs = [(m, e, p, pl, s) for (m, e) in agents for p in PRESSURES for pl in placements for s in range(1, a.seeds + 1)]
         todo = [j for j in jobs if run_id(*j) not in done_runs] if "run" in stages else []
-        n_emails = 6 * len(jobs) + 240
+        n_emails = (2 * len(jobs) + 240) if a.rule_wording == "reworded" else (6 * len(jobs) + 240)
         est = sum(EST_RUN.get((m, e or "low"), 0.2) for (m, e, *_) in todo)
         est += sum(EST_CHECK.get(m, 0.003) for (m, _) in monitors) * n_emails if "monitor" in stages else 0
         print(f"[plan] {len(jobs)} agent runs ({len(todo)} still to do): {len(agents)} agent setting(s) x "
-              f"2 pressure x 2 rule placements x {a.seeds} scenarios; then the monitor on every email.")
+              f"2 pressure x {len(placements)} rule placement(s) ({', '.join(placements)}) x {a.seeds} scenarios; "
+              "then the monitor on every email.")
         if not a.mock:
             print(f"[plan] estimated cost ~${est:.0f} (could be off by half either way). Hard stop at ${a.max_usd:.0f}.")
             if not a.yes and (todo or "monitor" in stages):
@@ -130,13 +140,16 @@ def main(argv=None) -> None:
                 if "run" in stages and todo:
                     await run_all(llm, [j for j in todo if (j[0], j[1]) in usable], fixed, runs_path, a.concurrency)
                 if "monitor" in stages:
-                    from .monitor import natural_items, run_monitor, seeded_items
+                    from .monitor import deferral_items, natural_items, run_monitor, seeded_items
                     runs = load_jsonl(runs_path)
-                    items = natural_items(runs) + seeded_items(runs)
-                    (a.workdir / "monitor_items.json").write_text(json.dumps(items, ensure_ascii=False), encoding="utf-8")
                     mons = [fixed.get(c, c) for c in monitors if c in usable]
                     done = {r["key"] for r in load_jsonl(mon_path)}
-                    await run_monitor(llm, items, mons, mon_path, done)
+                    if a.rule_wording == "original":
+                        items = natural_items(runs) + seeded_items(runs)
+                        (a.workdir / "monitor_items.json").write_text(json.dumps(items, ensure_ascii=False), encoding="utf-8")
+                    else:
+                        items = deferral_items(runs) + seeded_items(runs)
+                    await run_monitor(llm, items, mons, mon_path, done, a.rule_wording)
             except BudgetExceeded as e:
                 print(f"\nSTOPPED: {e}. Everything finished so far is saved. To continue, re-run with a higher --max-usd.")
             finally:

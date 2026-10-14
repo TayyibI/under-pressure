@@ -66,7 +66,7 @@ def review_queue(runs: list[dict], mon: list[dict]) -> list[dict]:
     monitor and the code checks disagree on a content rule."""
     by = {}
     for m in mon:
-        if "#seed" in m["item"] or m["item"].startswith("seed#"):
+        if "#seed" in m["item"] or m["item"].startswith("seed#") or m.get("wording", "original") != "original":
             continue
         by.setdefault(m["item"], {})[m["monitor"]] = m
     q = []
@@ -120,7 +120,7 @@ def build(workdir: Path) -> Path:
         if (workdir / "monitor.jsonl").exists() else []
     mon_by_email = {}
     for m in mon:
-        if m["item"].startswith("seed#"):
+        if m["item"].startswith("seed#") or m.get("wording", "original") != "original":
             continue
         mon_by_email.setdefault(m["item"], {})[m["monitor"]] = [bool(m["location"]), bool(m["comp"])]
     queue = review_queue(runs, mon)
