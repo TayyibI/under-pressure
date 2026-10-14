@@ -298,8 +298,6 @@ app/app_template.html  the simulator page
 site/                what GitHub Pages publishes: index.html is the Under Pressure page;
                      research-queue.html and kill-test.html are the earlier work
 tests/               pipeline tests (no API calls)
-docs/demo-script.md  2-minute video outline + outreach email draft (Who's worth 19 minutes?)
-docs/under-pressure-notes.md  what to say about Under Pressure: findings, replays to show, caveats, claims
 ```
 
 **Plugging in another screener:** add a branch to `screeners.screen()` that returns `{"rating", "score", "research", "reason"}`, then add its name to `SCREENERS`.
