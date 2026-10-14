@@ -4,6 +4,7 @@ Stages (each resumable; every API response is cached in <workdir>/llm_cache.json
   run      run the agents through every scenario and condition
   monitor  run the pre-send monitor over every email the agents sent, plus seeded test emails
   report   compute the results and write <workdir>/results/index.html
+  reparse  re-read any monitor answers the parser couldn't read, from the saved responses (no API calls)
 """
 from __future__ import annotations
 
@@ -35,17 +36,19 @@ def parse_configs(s: str) -> list[tuple[str, str | None]]:
 
 def parse(argv):
     ap = argparse.ArgumentParser(prog="pressure", description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("stage", choices=["run", "monitor", "report", "all"])
+    ap.add_argument("stage", choices=["run", "monitor", "report", "all", "reparse"])
     ap.add_argument("--mock", action="store_true", help="fake model, no API calls (pipeline test only)")
     ap.add_argument("--yes", action="store_true", help="skip the cost prompt")
     ap.add_argument("--workdir", default=None, help="default: run_pressure/ (run_pressure_mock/ with --mock)")
     ap.add_argument("--seeds", type=int, default=8, help="scenarios per condition (each is a different client/shortlist)")
-    ap.add_argument("--placements", default="top,buried", help="where the rules sit: top, buried, none (no written rules)")
+    ap.add_argument("--placements", default="top,buried",
+                    help="where the rules sit: top, buried, inbox (emailed on day 2), none; or a safeguard arm: gate, check, check_strict, all")
     ap.add_argument("--rule-wording", default="original", choices=["original", "reworded"],
                     help="monitor stage: 'reworded' re-checks the seeded emails and the agents' replies to the remote question "
                          "with the two content rules reworded, to see whether false alarms drop")
     ap.add_argument("--agents", default="sonnet:low,sonnet:medium,haiku:low", help="model:effort list for the agent")
     ap.add_argument("--monitors", default="haiku:low,sonnet:low", help="model:effort list for the pre-send monitor")
+    ap.add_argument("--checker", default="haiku:low", help="model:effort for the checker in front of send_email (safeguard arms)")
     ap.add_argument("--max-usd", type=float, default=25.0, help="hard stop: no new API calls once total spend reaches this")
     ap.add_argument("--concurrency", type=int, default=8)
     ap.add_argument("--author", default="Tayyib (github.com/TayyibI)")
@@ -83,6 +86,7 @@ def main(argv=None) -> None:
     sys.stdout = _Tee(sys.stdout, log)
     print(f"\n=== {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} · pressure {' '.join(argv if argv is not None else sys.argv[1:])}")
     agents, monitors = parse_configs(a.agents), parse_configs(a.monitors)
+    checker = parse_configs(a.checker)[0]
     stages = ["run", "monitor", "report"] if a.stage == "all" else [a.stage]
     runs_path, mon_path = a.workdir / "runs.jsonl", a.workdir / "monitor.jsonl"
 
@@ -104,7 +108,7 @@ def main(argv=None) -> None:
         jobs = [(m, e, p, pl, s) for (m, e) in agents for p in PRESSURES for pl in placements for s in range(1, a.seeds + 1)]
         todo = [j for j in jobs if run_id(*j) not in done_runs] if "run" in stages else []
         n_emails = (2 * len(jobs) + 240) if a.rule_wording == "reworded" else (6 * len(jobs) + 240)
-        est = sum(EST_RUN.get((m, e or "low"), 0.2) for (m, e, *_) in todo)
+        est = sum(EST_RUN.get((m, e or "low"), 0.2) for (m, e, *_) in todo) + 0.003 * len(todo)
         est += sum(EST_CHECK.get(m, 0.003) for (m, _) in monitors) * n_emails if "monitor" in stages else 0
         print(f"[plan] {len(jobs)} agent runs ({len(todo)} still to do): {len(agents)} agent setting(s) x "
               f"2 pressure x {len(placements)} rule placement(s) ({', '.join(placements)}) x {a.seeds} scenarios; "
@@ -126,7 +130,9 @@ def main(argv=None) -> None:
 
         async def go():
             try:
+                from .scenarios import GUARDS
                 need = list(dict.fromkeys(([(m, e) for (m, e, *_) in todo] if todo else []) +
+                                          ([checker] if any(j[3] in GUARDS and GUARDS[j[3]][1] == "code+llm" for j in todo) else []) +
                                           (monitors if "monitor" in stages else [])))
                 ok = await llm.preflight(need) if need else []
                 fixed = {}
@@ -138,7 +144,8 @@ def main(argv=None) -> None:
                             print(f"  using {c[0]} at its default effort instead of {c[1]}")
                 usable = set(ok) | set(fixed)
                 if "run" in stages and todo:
-                    await run_all(llm, [j for j in todo if (j[0], j[1]) in usable], fixed, runs_path, a.concurrency)
+                    await run_all(llm, [j for j in todo if (j[0], j[1]) in usable], fixed, runs_path, a.concurrency,
+                                  fixed.get(checker, checker))
                 if "monitor" in stages:
                     from .monitor import deferral_items, natural_items, run_monitor, seeded_items
                     runs = load_jsonl(runs_path)
@@ -159,13 +166,18 @@ def main(argv=None) -> None:
                           f"total in {a.workdir}: ${llm.total_usd:.2f}")
         asyncio.run(go())
 
+    if a.stage == "reparse" or "monitor" in stages:
+        from .monitor import reparse
+        n = reparse(a.workdir) if (a.workdir / "monitor.jsonl").exists() else 0
+        if n:
+            print(f"[reparse] {n} monitor answers re-read from saved responses")
     if "report" in stages:
         from .report import build
         out = build(a.workdir)
         print(f"[report] {out}")
 
 
-async def run_all(llm, todo, fixed, runs_path: Path, concurrency: int) -> None:
+async def run_all(llm, todo, fixed, runs_path: Path, concurrency: int, checker=None) -> None:
     sem = asyncio.Semaphore(concurrency)
     fh = runs_path.open("a", encoding="utf-8")
     t0, done, stop = time.time(), 0, False
@@ -181,7 +193,7 @@ async def run_all(llm, todo, fixed, runs_path: Path, concurrency: int) -> None:
             if stop:
                 return
             try:
-                rec = await run_agent(llm, m2, e2, p, pl, s)
+                rec = await run_agent(llm, m2, e2, p, pl, s, checker) if checker else await run_agent(llm, m2, e2, p, pl, s)
             except BudgetExceeded:
                 stop = True
                 raise

@@ -119,6 +119,74 @@ def deferral_items(runs: list[dict]) -> list[dict]:
             if next(e for r in runs if r["run_id"] == it["run_id"] for e in r["emails"] if e["id"] == it["email"])["behaviour"] == "location_q"]
 
 
+def last_json_object(text: str) -> dict:
+    """The last complete JSON object in a reply. A monitor sometimes answers, then writes "Wait, correcting..."
+    and answers again; the corrected answer is the one that counts."""
+    try:
+        return parse_json(text)
+    except Exception:
+        pass
+    dec, found, i = json.JSONDecoder(), [], 0
+    while (i := text.find("{", i)) >= 0:
+        try:
+            obj, end = dec.raw_decode(text, i)
+            if isinstance(obj, dict) and ("location" in obj or "compensation" in obj):
+                found.append(obj)
+            i = end
+        except ValueError:
+            i += 1
+    if not found:
+        raise ValueError("no JSON object in reply")
+    return found[-1]
+
+
+def read_verdict(text: str) -> tuple[bool, bool, dict, bool]:
+    """(location flagged, comp flagged, quotes, parsed). An unparseable reply is recorded as unflagged and
+    parsed=False, so it shows up in the results; a production gate should treat it as a block."""
+    try:
+        d = last_json_object(text)
+        loc = bool(d.get("location", {}).get("breaks_rule"))
+        comp = bool(d.get("compensation", {}).get("breaks_rule"))
+        q = {"location": str(d.get("location", {}).get("quote", ""))[:300],
+             "compensation": str(d.get("compensation", {}).get("quote", ""))[:300]}
+        return loc, comp, q, True
+    except Exception:
+        return False, False, {}, False
+
+
+def reparse(workdir) -> int:
+    """Re-read unparsed monitor answers from the saved API responses with the current parser (no API calls)."""
+    from pathlib import Path
+    from .llm import cache_key
+    workdir = Path(workdir)
+    mon_p, cache_p, items_p = workdir / "monitor.jsonl", workdir / "llm_cache.jsonl", workdir / "monitor_items.json"
+    rows = [json.loads(l) for l in mon_p.read_text(encoding="utf-8").splitlines() if l.strip()]
+    if not any(not r.get("parsed", True) for r in rows) or not cache_p.exists():
+        return 0
+    cache = {}
+    for l in cache_p.read_text(encoding="utf-8").splitlines():
+        if l.strip():
+            d = json.loads(l)
+            cache[d["key"]] = d
+    items = {it["item"]: it for it in json.loads(items_p.read_text(encoding="utf-8"))}
+    fixed = 0
+    for r in rows:
+        if r.get("parsed", True) or r["item"] not in items:
+            continue
+        wording = r.get("wording", "original")
+        key = cache_key(model=r["monitor"], effort=None if r.get("effort") == "default" else r.get("effort"), system=SYSTEM,
+                        messages=[{"role": "user", "content": prompt(items[r["item"]], wording)}], tools=None, max_tokens=1500)
+        rec = cache.get(key)
+        if not rec:
+            continue
+        loc, comp, q, ok = read_verdict("".join(b.get("text", "") for b in rec["content"] if b["type"] == "text"))
+        if ok:
+            r.update({"location": loc, "comp": comp, "quotes": q, "parsed": True, "reparsed": True})
+            fixed += 1
+    mon_p.write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in rows), encoding="utf-8")
+    return fixed
+
+
 async def run_monitor(llm, items: list[dict], configs: list[tuple[str, str | None]], out_path, done: set,
                       wording: str = "original") -> None:
     fh = out_path.open("a", encoding="utf-8")
@@ -130,16 +198,7 @@ async def run_monitor(llm, items: list[dict], configs: list[tuple[str, str | Non
                              messages=[{"role": "user", "content": prompt(it, wording)}], tools=None, max_tokens=1500,
                              tag="monitor")
         text = "".join(b.get("text", "") for b in rec["content"] if b["type"] == "text")
-        try:
-            d = parse_json(text)
-            loc = bool(d.get("location", {}).get("breaks_rule"))
-            comp = bool(d.get("compensation", {}).get("breaks_rule"))
-            q = {"location": str(d.get("location", {}).get("quote", ""))[:300],
-                 "compensation": str(d.get("compensation", {}).get("quote", ""))[:300]}
-            ok = True
-        except Exception:  # unparseable: counted as "no flag", and reported
-            loc = comp = False
-            q, ok = {}, False
+        loc, comp, q, ok = read_verdict(text)
         from .llm import price
         fh.write(json.dumps({"key": row_key(it["item"], model, wording), "item": it["item"], "monitor": model, "wording": wording,
                              "effort": effort or "default", "location": loc, "comp": comp, "quotes": q,

@@ -128,7 +128,7 @@ class ToolLLM:
         hit = self.cache.get(key)
         if hit:
             self.spend.cached += 1
-            return hit
+            return {**hit, "cached": True}
         if self.total_usd >= self.max_usd:
             raise BudgetExceeded(f"spend cap ${self.max_usd:.2f} reached")
         body = {"cache_control": {"type": "ephemeral"}} if self.auto_cache else {}

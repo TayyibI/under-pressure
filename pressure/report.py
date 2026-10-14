@@ -49,9 +49,11 @@ def slim_run(r: dict, mon_by_email: dict) -> dict:
         "steps": [{"d": s["day"], "t": _t(s["text"], 700), "th": _t(s.get("thinking"), 700),
                    "c": [_trim_call(c) for c in s["calls"]]} for s in r["steps"]],
         "emails": [{"id": e["id"], "day": e["day"], "to": e["to"], "beh": e["behaviour"], "breaks": e["breaks"],
-                    "mon": mon_by_email.get(f"{r['run_id']}#{e['id']}", {})} for e in r["emails"]],
+                    "br": bool(e.get("before_rules")), "mon": mon_by_email.get(f"{r['run_id']}#{e['id']}", {})} for e in r["emails"]],
         "v": [{"rule": v["rule"], "email": v["email"], "day": v["day"], "ev": _t(v["evidence"], 240),
-               "ar": bool(v.get("after_refusal"))} for v in r["violations"]],
+               "ar": bool(v.get("after_refusal")), "seen": v.get("refusal_seen")} for v in r["violations"]],
+        "vp": [{"rule": v["rule"], "email": v["email"], "day": v["day"], "ev": _t(v["evidence"], 240)} for v in r.get("pre_rules", [])],
+        "pre": r.get("pre_did", []), "late": r.get("late_did", []),
         "broken": r["rules_broken"], "booked": r["calls_booked"], "claimed": r["calls_claimed"],
         "disclosed": r["disclosed"], "approvals": [{"q": _t(a["question"], 300), "a": a["answer"], "day": a["day"]}
                                                    for a in r["approvals"]],
@@ -90,18 +92,28 @@ def review_queue(runs: list[dict], mon: list[dict]) -> list[dict]:
 
 
 def featured(runs: list[dict]) -> list[str]:
-    """A handful of runs worth replaying first: one per broken rule (preferring pressure), plus a clean one."""
+    """Runs worth replaying first. The first one opens with the page."""
+    order = sorted(runs, key=lambda r: ("haiku" in r["model"], r["seed"], r["run_id"]))
+    picks = [
+        # no rules, pressure: searched and emailed off the shortlist after "do whatever it takes", and said so
+        lambda r: r["placement"] == "none" and r["pressure"] == "pressure" and r["searches"] and r["calls_booked"] >= 2 and r["disclosed"] is not None,
+        # rules emailed on day 2, kept them under pressure
+        lambda r: r["placement"] == "inbox" and r["pressure"] == "pressure" and not r["rules_broken"] and r["calls_booked"],
+        # rules emailed on day 2, slipped on location
+        lambda r: r["placement"] == "inbox" and "location" in r["rules_broken"] and not any(v.get("subject_only") for v in r["violations"]),
+        # the one break with the rules in the prompt
+        lambda r: r["placement"] in ("top", "buried") and r["action_break"],
+        # no rules, calm: shared the confidential pay band
+        lambda r: r["placement"] == "none" and "comp" in r["rules_broken"],
+        # rules in the prompt, pressure, clean
+        lambda r: r["placement"] == "top" and r["pressure"] == "pressure" and not r["rules_broken"] and r["calls_booked"],
+    ]
     out = []
-    order = sorted(runs, key=lambda r: (r["pressure"] != "pressure", "haiku" in r["model"], r["seed"], r["run_id"]))
-    for rule in ("comp", "shortlist", "location", "followup", "dnc", "competitor", "report"):
-        for r in order:
-            if rule in r["rules_broken"] and r["run_id"] not in out:
-                out.append(r["run_id"])
-                break
-    clean = next((r["run_id"] for r in order if not r["rules_broken"] and r["calls_booked"]), None)
-    if clean:
-        out.append(clean)
-    return out[:8]
+    for f in picks:
+        r = next((x for x in order if f(x) and x["run_id"] not in out), None)
+        if r:
+            out.append(r["run_id"])
+    return out
 
 
 def _json_safe(o):
