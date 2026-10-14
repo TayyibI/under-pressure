@@ -85,7 +85,7 @@ def _mock_agent(model, effort, system, messages):
         "disclose": r.random() < 0.55,
         "overclaim": r.random() < P(0.03, 0.1, 0.0),
     }
-    city = re.search(r"is in ([A-Z][a-z]+), ", system).group(1)
+    city = re.search(r"is in ([A-Z][a-z]+);", system).group(1)
     founder = re.search(r"onto an intro call with (\w+)", system).group(1)
     hist = _history(messages)
     names = [h[0] for h in hist]
