@@ -18,8 +18,8 @@ if not defined DONE if exist "%ROOT%\run_quick\results.jsonl" (
   set "DONE=1"
 )
 if not defined DONE (
-  if exist "%ROOT%\site\index.html" (
-    start "" "%ROOT%\site\index.html"
+  if exist "%ROOT%\site\research-queue.html" (
+    start "" "%ROOT%\site\research-queue.html"
   ) else (
     echo No finished runs yet. Run run_kill_test.bat first.
   )

@@ -80,6 +80,7 @@ python -m pressure report                          # rebuild the page
 - On Windows, double-click `run_under_pressure.bat`. The `run_under_pressure_*.bat` files are the later stages.
 - `python -m pressure report --workdir results/under-pressure` rebuilds the published page from the saved data, with no API calls.
 - Output: `run_pressure/results/index.html`, a page that replays every run step by step.
+- The published copy is `site/index.html`. After a new run, copy `run_pressure/results/index.html` over it. Pushing to GitHub then deploys it with Pages (one-time setup: Settings → Pages → Source: GitHub Actions).
 
 **Files:**
 
@@ -110,7 +111,7 @@ Two connected pieces of work on first-pass candidate screening:
 
 In Metaview's fillmore case study, 720 engineers were researched over 24 days before candidate #721. His role descriptions were sparse, so the profile-only first pass scored him "good, not great". Then 19 minutes of research (58 actions) turned that into "great", and he was hired. Research is where agent-hours go. This simulator asks what order to research candidates in.
 
-**Open it:** `site/index.html` in any browser, or double-click `open_simulator.bat`. No server or install is needed. It's one static file with no dependencies besides Google Fonts.
+**Open it:** `site/research-queue.html` in any browser, or double-click `open_simulator.bat`. No server or install is needed. It's one static file with no dependencies besides Google Fonts.
 
 **Deploy it:** any static host works.
 - **GitHub Pages:** push the repo, then set Settings → Pages → Source to "GitHub Actions". `.github/workflows/pages.yml` publishes `site/`.
@@ -148,7 +149,7 @@ The claude.ai Artifact version (`artifact.html`) adds one feature, "run this fir
 
 **What it is not.** It is not fillmore's ranking, data or code. Labels come from a synthetic benchmark (21 candidates, 2 repeats, Sonnet 5.5 at low effort), so read the posterior bars as directions. The calibrated lane uses the same table the simulator draws labels from, so it is a best case. The learns-as-it-goes lane is the realistic version.
 
-**Rebuild after a new run.** `python -m twins app --quick` (or without `--quick` for the full run) writes `<run>/app/`. Copy `index.html` and `kill-test.html` into `site/` to redeploy.
+**Rebuild after a new run.** `python -m twins app --quick` (or without `--quick` for the full run) writes `<run>/app/`. Copy its `index.html` to `site/research-queue.html`, and `kill-test.html` into `site/`, to redeploy.
 
 ---
 
@@ -294,7 +295,8 @@ twins/llm.py         Anthropic client (cache, retries, preflight, spend) + mock
 twins/calibrate.py   label counts -> simulator data; builds the simulator page
 app/sim.js           research-queue simulator (no dependencies; runs in the page and under node)
 app/app_template.html  the simulator page
-site/                built simulator + first test's results, ready for any static host
+site/                what GitHub Pages publishes: index.html is the Under Pressure page;
+                     research-queue.html and kill-test.html are the earlier work
 tests/               pipeline tests (no API calls)
 docs/demo-script.md  2-minute video outline + outreach email draft (Who's worth 19 minutes?)
 docs/under-pressure-notes.md  what to say about Under Pressure: findings, replays to show, caveats, claims

@@ -1,4 +1,4 @@
-# Publishes site/ (the research-queue simulator and the first test's results) to GitHub Pages.
+# Publishes site/ to GitHub Pages: the Under Pressure page (index.html) and the earlier research-queue simulator.
 # One-time setup: repo Settings -> Pages -> Source: GitHub Actions.
 name: Deploy site to GitHub Pages
 on:
