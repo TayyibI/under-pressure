@@ -1,0 +1,197 @@
+
+=== 2026-10-14 21:59:01 · pressure all --yes
+[plan] 96 agent runs (96 still to do): 3 agent setting(s) x 2 pressure x 2 rule placements x 8 scenarios; then the monitor on every email.
+[plan] estimated cost ~$16 (could be off by half either way). Hard stop at $25.
+  preflight ok: claude-sonnet-5-5 effort=low
+  preflight ok: claude-sonnet-5-5 effort=medium
+  preflight ok: claude-haiku-5-5 effort=low
+[run] 96 agent runs
+  6/96 runs · 23s · $0.33 so far
+  12/96 runs · 46s · $0.74 so far
+  18/96 runs · 65s · $1.01 so far
+  24/96 runs · 78s · $1.21 so far
+  30/96 runs · 100s · $1.53 so far
+  36/96 runs · 122s · $1.80 so far
+  42/96 runs · 142s · $2.14 so far
+  48/96 runs · 157s · $2.33 so far
+  54/96 runs · 176s · $2.57 so far
+  60/96 runs · 204s · $3.00 so far
+  66/96 runs · 226s · $3.10 so far
+  72/96 runs · 245s · $3.13 so far
+  78/96 runs · 256s · $3.14 so far
+  84/96 runs · 276s · $3.16 so far
+  90/96 runs · 301s · $3.19 so far
+  96/96 runs · 316s · $3.20 so far
+[monitor] 1902 checks to run (951 emails x 2 monitor model(s))
+  monitor 190/1902
+  monitor 380/1902
+  monitor 570/1902
+  monitor 760/1902
+  monitor 950/1902
+  monitor 1140/1902
+  monitor 1330/1902
+  monitor 1520/1902
+  monitor 1710/1902
+  monitor 1900/1902
+  monitor 1902/1902
+[spend] this session $4.65 (2722 API calls, 147 cache hits); total in run_pressure: $4.65
+[report] 96 runs · 47 emails in review_queue.json · 0 soft location mentions not yet reviewed
+[report] run_pressure\results\index.html
+
+=== 2026-10-14 22:19:04 · pressure all --yes --placements none
+[plan] 48 agent runs (48 still to do): 3 agent setting(s) x 2 pressure x 1 rule placement(s) (none) x 8 scenarios; then the monitor on every email.
+[plan] estimated cost ~$8 (could be off by half either way). Hard stop at $25.
+  preflight ok: claude-sonnet-5-5 effort=low
+  preflight ok: claude-sonnet-5-5 effort=medium
+  preflight ok: claude-haiku-5-5 effort=low
+[run] 48 agent runs
+  6/48 runs · 34s · $5.18 so far
+  12/48 runs · 61s · $5.59 so far
+  18/48 runs · 89s · $6.03 so far
+  24/48 runs · 109s · $6.32 so far
+  30/48 runs · 130s · $6.60 so far
+  36/48 runs · 156s · $6.67 so far
+  42/48 runs · 174s · $6.69 so far
+  48/48 runs · 199s · $6.70 so far
+[monitor] 696 checks to run (1299 emails x 2 monitor model(s))
+  monitor 69/696
+  monitor 138/696
+  monitor 207/696
+  monitor 276/696
+  monitor 345/696
+  monitor 414/696
+  monitor 483/696
+  monitor 552/696
+  monitor 621/696
+  monitor 690/696
+  monitor 696/696
+[spend] this session $2.69 (1208 API calls, 25 cache hits); total in run_pressure: $7.34
+[report] 144 runs · 52 emails in review_queue.json · 0 soft location mentions not yet reviewed
+[report] run_pressure\results\index.html
+
+=== 2026-10-14 22:35:27 · pressure all --yes --placements inbox
+[plan] 48 agent runs (48 still to do): 3 agent setting(s) x 2 pressure x 1 rule placement(s) (inbox) x 8 scenarios; then the monitor on every email.
+[plan] estimated cost ~$8 (could be off by half either way). Hard stop at $25.
+  preflight ok: claude-sonnet-5-5 effort=low
+  preflight ok: claude-sonnet-5-5 effort=medium
+  preflight ok: claude-haiku-5-5 effort=low
+[run] 48 agent runs
+  6/48 runs · 28s · $7.80 so far
+  12/48 runs · 40s · $8.07 so far
+  18/48 runs · 46s · $8.13 so far
+  24/48 runs · 62s · $8.46 so far
+  30/48 runs · 73s · $8.61 so far
+  36/48 runs · 85s · $8.64 so far
+  42/48 runs · 95s · $8.65 so far
+  48/48 runs · 109s · $8.66 so far
+[monitor] 670 checks to run (1634 emails x 2 monitor model(s))
+  monitor 67/670
+  monitor 134/670
+  monitor 201/670
+  monitor 268/670
+  monitor 335/670
+  monitor 402/670
+  monitor 469/670
+  monitor 536/670
+  monitor 603/670
+  monitor 670/670
+[spend] this session $1.61 (620 API calls, 523 cache hits); total in run_pressure: $8.95
+[report] 192 runs · 81 emails in review_queue.json · 1 soft location mentions not yet reviewed
+[report] run_pressure\results\index.html
+
+=== 2026-10-14 22:38:38 · pressure monitor --yes --rule-wording reworded
+[plan] 96 agent runs (0 still to do): 3 agent setting(s) x 2 pressure x 2 rule placement(s) (top, buried) x 8 scenarios; then the monitor on every email.
+[plan] estimated cost ~$1 (could be off by half either way). Hard stop at $25.
+  preflight ok: claude-haiku-5-5 effort=low
+  preflight ok: claude-sonnet-5-5 effort=low
+[monitor] 864 checks to run (432 emails x 2 monitor model(s))
+  monitor 86/864
+  monitor 172/864
+  monitor 258/864
+  monitor 344/864
+  monitor 430/864
+  monitor 516/864
+  monitor 602/864
+  monitor 688/864
+  monitor 774/864
+  monitor 860/864
+  monitor 864/864
+[spend] this session $0.62 (834 API calls, 30 cache hits); total in run_pressure: $9.56
+
+=== 2026-10-14 22:41:06 · pressure report
+[report] 192 runs · 81 emails in review_queue.json · 1 soft location mentions not yet reviewed
+[report] run_pressure\results\index.html
+
+=== 2026-10-14 23:26:40 · pressure all --yes --placements gate,check,check_strict,all
+[plan] 192 agent runs (192 still to do): 3 agent setting(s) x 2 pressure x 4 rule placement(s) (gate, check, check_strict, all) x 8 scenarios; then the monitor on every email.
+[plan] estimated cost ~$32 (could be off by half either way). Hard stop at $25.
+  preflight ok: claude-sonnet-5-5 effort=low
+  preflight ok: claude-sonnet-5-5 effort=medium
+  preflight ok: claude-haiku-5-5 effort=low
+[run] 192 agent runs
+  6/192 runs · 21s · $9.95 so far
+  12/192 runs · 27s · $9.96 so far
+  18/192 runs · 53s · $10.30 so far
+  24/192 runs · 61s · $10.40 so far
+  30/192 runs · 84s · $10.74 so far
+  36/192 runs · 93s · $10.91 so far
+  42/192 runs · 107s · $11.04 so far
+  48/192 runs · 113s · $11.14 so far
+  54/192 runs · 144s · $11.54 so far
+  60/192 runs · 148s · $11.56 so far
+  66/192 runs · 163s · $11.89 so far
+  72/192 runs · 171s · $11.95 so far
+  78/192 runs · 179s · $12.02 so far
+  84/192 runs · 201s · $12.32 so far
+  90/192 runs · 210s · $12.39 so far
+  96/192 runs · 221s · $12.61 so far
+  102/192 runs · 237s · $12.87 so far
+  108/192 runs · 244s · $12.90 so far
+  114/192 runs · 280s · $13.40 so far
+  120/192 runs · 287s · $13.45 so far
+  126/192 runs · 291s · $13.47 so far
+  132/192 runs · 310s · $13.50 so far
+  138/192 runs · 315s · $13.51 so far
+  144/192 runs · 323s · $13.52 so far
+  150/192 runs · 347s · $13.54 so far
+  156/192 runs · 350s · $13.54 so far
+  162/192 runs · 371s · $13.57 so far
+  168/192 runs · 378s · $13.58 so far
+  174/192 runs · 384s · $13.59 so far
+  180/192 runs · 417s · $13.63 so far
+  186/192 runs · 422s · $13.63 so far
+  192/192 runs · 443s · $13.63 so far
+[monitor] 2612 checks to run (2940 emails x 2 monitor model(s))
+  monitor 261/2612
+  monitor 522/2612
+  monitor 783/2612
+  monitor 1044/2612
+  monitor 1305/2612
+  monitor 1566/2612
+  monitor 1827/2612
+  monitor 2088/2612
+  monitor 2349/2612
+  monitor 2610/2612
+  monitor 2612/2612
+[spend] this session $5.17 (2870 API calls, 2959 cache hits); total in run_pressure: $14.74
+[reparse] 4 monitor answers re-read from saved responses
+[report] 384 runs · 195 emails in review_queue.json · 4 soft location mentions not yet reviewed
+[report] run_pressure\results\index.html
+
+=== 2026-10-14 23:39:51 · pressure reparse --workdir /home/claude/rpfinal
+
+=== 2026-10-14 23:39:51 · pressure report --workdir /home/claude/rpfinal
+[report] 384 runs · 193 emails in review_queue.json · 0 soft location mentions not yet reviewed
+[report] /home/claude/rpfinal/results/index.html
+
+=== 2026-10-14 23:40:45 · pressure report --workdir /home/claude/rpfinal
+[report] 384 runs · 191 emails in review_queue.json · 0 soft location mentions not yet reviewed
+[report] /home/claude/rpfinal/results/index.html
+
+=== 2026-10-14 23:41:51 · pressure report --workdir /home/claude/rpfinal
+[report] 384 runs · 191 emails in review_queue.json · 0 soft location mentions not yet reviewed
+[report] /home/claude/rpfinal/results/index.html
+
+=== 2026-10-14 23:42:54 · pressure report --workdir results/under-pressure
+[report] 384 runs · 191 emails in review_queue.json · 0 soft location mentions not yet reviewed
+[report] results/under-pressure/results/index.html

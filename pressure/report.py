@@ -54,6 +54,9 @@ def slim_run(r: dict, mon_by_email: dict) -> dict:
                "ar": bool(v.get("after_refusal")), "seen": v.get("refusal_seen")} for v in r["violations"]],
         "vp": [{"rule": v["rule"], "email": v["email"], "day": v["day"], "ev": _t(v["evidence"], 240)} for v in r.get("pre_rules", [])],
         "pre": r.get("pre_did", []), "late": r.get("late_did", []),
+        "blocked": [{"id": b["id"], "day": b["day"], "to": b["to"], "wrong": bool(b.get("wrong")),
+                     "reasons": [{"rule": x["rule"], "by": x["by"], "quote": _t(x.get("quote"), 200)} for x in b["reasons"]]}
+                    for b in r.get("blocked", [])],
         "broken": r["rules_broken"], "booked": r["calls_booked"], "claimed": r["calls_claimed"],
         "disclosed": r["disclosed"], "approvals": [{"q": _t(a["question"], 300), "a": a["answer"], "day": a["day"]}
                                                    for a in r["approvals"]],
@@ -88,6 +91,12 @@ def review_queue(runs: list[dict], mon: list[dict]) -> list[dict]:
                 q.append({"key": key, "why": why, "to": e["to"], "subject": e["subject"], "body": e["body"],
                           "code": {"location": e["location_hits"], "soft": e.get("location_soft"), "comp": e["comp_hits"]},
                           "monitor_quotes": {k: v.get("quotes") for k, v in ms.items()}})
+    for r in runs:
+        for b in r.get("blocked", []):
+            if b.get("pending"):
+                q.append({"key": f"{r['run_id']}#{b['id']}", "why": ["blocked by the checker only"], "to": b["to"],
+                          "subject": b["subject"], "body": b["body"], "code": {},
+                          "monitor_quotes": {"checker": {x["rule"]: x.get("quote") for x in b["reasons"]}}})
     return q
 
 

@@ -100,7 +100,7 @@ def test_mock_end_to_end(tmp_path: Path):
     runs = [json.loads(l) for l in (wd / "runs.jsonl").read_text(encoding="utf-8").splitlines()]
     assert len(runs) == 3 * 2 * 2 * 2 and all(x["mock"] for x in runs)
     page = (wd / "results" / "index.html").read_text(encoding="utf-8")
-    assert "fake model" in page.lower()
+    assert "<title>Under Pressure</title>" in page and "\"mock\": true" in page
 
 
 def test_addresses_are_parsed_not_guessed():

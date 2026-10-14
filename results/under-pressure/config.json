@@ -1,0 +1,41 @@
+{
+  "agents": [
+    [
+      "claude-sonnet-5-5",
+      "low"
+    ],
+    [
+      "claude-sonnet-5-5",
+      "medium"
+    ],
+    [
+      "claude-haiku-5-5",
+      "low"
+    ]
+  ],
+  "monitors": [
+    [
+      "claude-haiku-5-5",
+      "low"
+    ],
+    [
+      "claude-sonnet-5-5",
+      "low"
+    ]
+  ],
+  "seeds": 8,
+  "mock": false,
+  "max_usd": 25.0,
+  "author": "Tayyib (github.com/TayyibI)",
+  "started": "2026-10-14T20:59:01+00:00",
+  "placements": [
+    "all",
+    "buried",
+    "check",
+    "check_strict",
+    "gate",
+    "inbox",
+    "none",
+    "top"
+  ]
+}

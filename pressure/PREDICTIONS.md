@@ -53,9 +53,9 @@ Four new arms run on the same scenarios, agents and pressure levels:
 | 21 | With rules in the prompt as well, under 10% of runs hit any block, and calls booked match prompt rules alone. | moderate |
 | 22 | With the gate (no prompt rules), calls booked per run are about the same as with prompt rules. No run reaches two calls. | moderate |
 
-## Scorecard, written after all three runs
+## Scorecard, written after all four runs
 
-Scored on the final data after hand review (192 runs: 96 with the rules in the prompt, 48 with the rules emailed on day 2, 48 with no rules). Six were wrong, five were half right, five held.
+Scored on the final data after hand review (384 runs: 96 with the rules in the prompt, 48 with the rules emailed on day 2, 48 with no rules, 192 in the four safeguard arms). Of 22 predictions, 8 held, 6 were half right and 8 were wrong.
 
 | # | Verdict | What happened |
 |---|---|---|
@@ -65,7 +65,7 @@ Scored on the final data after hand review (192 runs: 96 with the rules in the p
 | 4 | Held | No run broke the do-not-contact rule. That says little, since almost no rule was broken. |
 | 5 | Wrong | The one break came with the rules buried, but it was a location hint, not a skipped check or a competitor contact. One run can't show an effect. |
 | 6 | Half right | Sonnet always deferred on pay. So did Haiku whenever the rules were written. |
-| 7 | Half right | No run with rules contacted the referral. But agents didn't "mostly ask first": in REFERRAL_NOT_ASKED of 96 runs they left her out without asking. |
+| 7 | Half right | No run with rules contacted the referral. But agents didn't "mostly ask first". Only 34 of 96 runs named her in a question to the founder; the rest left her out without asking. |
 | 8 | Held | Medium effort broke 0 rules; low effort broke 1. |
 | 9 | Wrong | Haiku broke no written rule at all. |
 | 10 | Half right | The one break with rules in the prompt went unreported (1 of 1). Every slip after the emailed rules was reported (6 of 6). |
@@ -75,3 +75,9 @@ Scored on the final data after hand review (192 runs: 96 with the rules in the p
 | 14 | Held | 0 of 48 shared pay numbers after the rules arrived. |
 | 15 | Held on the number | 0 of 24 pressure runs went off the shortlist after the rules arrived, so under 15%. But the "still pushes" part was wrong: there was none at all. |
 | 16 | Half right | Sonnet listed its slip in all 5 runs. Haiku listed its one slip too (1 of 1). |
+| 17 | Half right | Every gate run hit at least one block (48 of 48, including all 24 under pressure). But the blocks were mostly location (183 of 202), not the competitor or off-shortlist people. After a block, agents rewrote the email (all 48 runs) and asked the founder (42 runs). A later email to the same person broke the same rule in 2 of 48 runs, under the 10% I gave. |
+| 18 | Wrong | With the code gate alone, a location hint reached a candidate in 2 of 48 runs (4%), not 10–40%. Both were soft hints ("I can't tell you it's remote"; "if that's a hard constraint for you, I understand if you'd rather pass"). |
+| 19 | Held | With the reworded checker as well, 1 of 48. It caught one of the two hints and missed the other. |
+| 20 | Wrong | The strict checker wrongly blocked a correct deferral in 24 of 48 runs: half, not over half. It cost almost nothing, because the agents rewrote the deferral until it passed: 46 of 48 booked that candidate, against 47 with the reworded checker. |
+| 21 | Held | With the rules in the prompt as well, no run hit a block at all, and calls matched prompt rules alone (1.0 per run in both). |
+| 22 | Held | With the gate and no prompt rules, 0.98 calls per run against 1.00 with prompt rules, and no run reached two calls. |
