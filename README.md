@@ -53,11 +53,11 @@ python -m pytest -q                                     # 9 tests, no API calls
 ## Run
 
 ```bash
-# 1. Kill test first: 21 candidates, Sonnet only, 2 repeats. About 500 calls, roughly $6, ~10 min.
+# 1. Kill test first: 21 candidates, Sonnet only, 2 repeats. About 550 calls; the first real run cost $1.94 and took ~3 min.
 python -m twins all --quick
 
-# 2. Full run if the kill test shows a signal: 60 candidates, Sonnet + Haiku, 3 repeats.
-#    About 4,300 calls, roughly $25, 30-60 min.
+# 2. Full run: 60 candidates, Sonnet + Haiku, 3 repeats.
+#    About 4,400 calls, roughly $8-12 at the measured rate, 15-30 min.
 python -m twins all
 
 # Pipeline check with a fake model (no key, no cost; the report is stamped MOCK)
@@ -69,7 +69,7 @@ python -m twins all --mock
 - **Interruptions are safe.** Every API response is cached in `<workdir>/llm_cache.jsonl`, so if a run stops, re-running the same command resumes for free.
 
 **Outputs**, in `run_quick/results/` or `run/results/`:
-- `index.html`: open it in a browser. It has the headline numbers, the chart, every metric, and "twin cards" showing the same candidate four ways.
+- `index.html`: open it in a browser. It opens on one candidate written four ways with every screener's verdict, then answers four questions with charts, then lists more candidates and every metric.
 - `report.md`: the same numbers as tables.
 - `summary.json`: everything, machine-readable.
 
@@ -92,19 +92,19 @@ Model IDs and prices were checked against platform.claude.com/docs on 2026-10-13
 | Metric | Meaning |
 |---|---|
 | **Same-text repeat noise** | how often a screener disagrees with *itself* on identical text. This is the baseline every flip rate must beat. |
-| **Label differs across any style** | how often plain, polished and verbose (same facts) get different labels |
+| **Plain vs AI-polished, label changed** | compare this with the repeat noise; the per-candidate gap is reported with a 95% interval and a paired Wilcoxon test |
 | **Avg rating shift, AI-polished vs plain** | on the 0-3 scale, with a 95% bootstrap CI and a paired Wilcoxon test. Positive means polish is rewarded. |
 | **#721 pattern** | of the candidates whose facts make them "great", how often the sparse version is rated below great *and not* sent to research |
 | **Full profiles wrongly routed to research** | the cost of the fix. It should be near zero. |
 
-**Kill-test decision.** The story is alive if, for the naive screener, at least one of these holds:
-- (a) style flips clearly exceed the repeat noise, about 10+ points higher;
-- (b) the polish shift's CI excludes zero;
-- (c) the #721 pattern is substantial, about 30% or more.
+## First result (kill test, 2026-10-14)
 
-The fix is shown to work if facts-first cuts those numbers without routing full profiles to research.
+21 candidates, Sonnet 5.5 at low effort, 2 repeats, $1.94. Small sample, so treat these as directions to confirm with the full run.
 
-**If none of this shows up, that's a real finding too:** "current Claude models are robust to presentation on this benchmark." Don't stretch the numbers.
+- **AI polish did not move ratings.** Plain vs polished labels changed 2% of the time, the same as re-rating identical text; average shift +0.02 (p = 0.68). The self-preference effect reported by Xu et al. (2025) in head-to-head comparisons did not show up in this one-at-a-time setup.
+- **A forced-label screen marks sparse profiles down.** The naive screener rated every great-on-paper candidate below great when only titles and dates were visible, and gave "okay" to 90% of sparse profiles regardless of the person.
+- **The prompt-level fix overcorrects.** Adding "treat missing information as unknown and flag for research" sent every sparse profile to research, and also 29% of complete profiles: 0% of great candidates, 14% of good, 58% of okay, 61% of poor.
+- **Facts-first routed only the thin profiles** (100% of sparse, 0% of complete). Its thin-profile rule is a word count, which this benchmark separates cleanly, so this is a best case.
 
 ## What this does and does not show
 

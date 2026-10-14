@@ -22,8 +22,9 @@ from .screeners import SCREENERS
 DEFAULT_MODELS = ["claude-sonnet-5-5", "claude-haiku-5-5"]
 QUICK = {"per_brief": 7, "models": ["claude-sonnet-5-5"], "repeats": 2}
 FULL = {"per_brief": 20, "models": DEFAULT_MODELS, "repeats": 3}
-# Rough per-call token guess used only for the pre-run estimate (actual spend is tracked from API usage).
-EST_IN, EST_OUT = 1300, 700
+# Per-call token averages measured on the first real run (Sonnet 5.5, effort low), with ~30% headroom.
+# Used only for the pre-run estimate; actual spend is tracked from API usage.
+EST_IN, EST_OUT = 950, 250
 
 
 def parse(argv):
@@ -108,7 +109,7 @@ def main(argv=None) -> None:
         if not a.mock:
             n_people = len(json.loads((data_dir / "truth.json").read_text(encoding="utf-8")))
             calls = n_people * 4 * len(a.screeners) * len(a.models) * a.repeats if "screen" in stages else 0
-            est = estimate(calls, a.models, a.screeners) + (n_people * 2 * 0.03 if "rewrite" in stages else 0)
+            est = estimate(calls, a.models, a.screeners) + (n_people * 2 * 0.009 if "rewrite" in stages else 0)
             print(f"[plan] up to {calls} screening calls on {', '.join(a.models)}"
                   + (f" + {n_people * 2} rewrites" if "rewrite" in stages else "")
                   + f"; rough estimate ${est:.2f}. Cached calls are free; real spend is printed at the end.")

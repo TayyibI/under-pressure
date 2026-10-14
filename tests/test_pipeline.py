@@ -93,4 +93,4 @@ def test_mock_pipeline_end_to_end(tmp_path: Path):
     assert summary["errors"] == 0
     m = summary["metrics"][summary["meta"]["models"][0]]
     assert set(m) == {"naive", "instructed", "facts_first"}
-    assert (wd / "results" / "index.html").read_text(encoding="utf-8").count("MOCK RUN") >= 1
+    assert (wd / "results" / "index.html").read_text(encoding="utf-8").count("Practice run with a fake model") >= 1

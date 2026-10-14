@@ -78,9 +78,11 @@ def analyze(results_path: Path, data_dir: Path, models: list[str], screeners: li
             exact_plain, within1_plain, exact_pol = [], [], []
             mean_by_var = {v: [] for v in VARIANTS}
             diffs_pol, diffs_verb, diffs_sparse = [], [], []
+            excess_pp, excess_pv = [], []  # per person: style flip rate minus same-text noise rate
 
             for pid in persons:
                 ref = truth[pid]["ref_tier"]
+                n0, pp0, pv0 = len(noise), len(flip_pp), len(flip_pv)
                 for v in STYLES:
                     labs = [get(pid, v, r)["rating"] for r in range(repeats) if get(pid, v, r)]
                     for a, b in itertools.combinations(labs, 2):
@@ -111,6 +113,11 @@ def analyze(results_path: Path, data_dir: Path, models: list[str], screeners: li
                             down.append(rr["sparse"]["score"] < rr["plain"]["score"] and not rr["sparse"].get("research"))
                         if ref == "great":
                             pattern.append(rr["sparse"]["rating"] != "great" and not rr["sparse"].get("research"))
+                p_noise, p_pp, p_pv = noise[n0:], flip_pp[pp0:], flip_pv[pv0:]
+                if p_noise and p_pp:
+                    excess_pp.append(statistics.mean(p_pp) - statistics.mean(p_noise))
+                if p_noise and p_pv:
+                    excess_pv.append(statistics.mean(p_pv) - statistics.mean(p_noise))
                 means = {v: statistics.mean(xs) for v, xs in per_var_scores.items() if xs}
                 for v in VARIANTS:
                     if v in means:
@@ -140,6 +147,12 @@ def analyze(results_path: Path, data_dir: Path, models: list[str], screeners: li
                 "flip_plain_polished": _rate(flip_pp),
                 "flip_plain_verbose": _rate(flip_pv),
                 "flip_any_style": _rate(flip_any),
+                "excess_polished": statistics.mean(excess_pp) if excess_pp else None,
+                "excess_polished_ci": _boot_ci(excess_pp, rng),
+                "excess_polished_p": wilcoxon_p(excess_pp),
+                "excess_verbose": statistics.mean(excess_pv) if excess_pv else None,
+                "excess_verbose_ci": _boot_ci(excess_pv, rng),
+                "n_obs_great": len(pattern),
                 "delta_polished": statistics.mean(diffs_pol) if diffs_pol else None,
                 "delta_polished_ci": _boot_ci(diffs_pol, rng),
                 "delta_polished_p": wilcoxon_p(diffs_pol),
@@ -157,6 +170,8 @@ def analyze(results_path: Path, data_dir: Path, models: list[str], screeners: li
                 "within1_ref_plain": _rate(within1_plain),
                 "agree_ref_polished": _rate(exact_pol),
                 "kendall_tau_plain_vs_polished": tau,
+                "false_research_by_tier": _by_tier_research(persons, truth, get, repeats),
+                **_sparse_collapse(persons, get, repeats),
                 "mean_score": {v: (statistics.mean(xs) if xs else None) for v, xs in mean_by_var.items()},
                 "mean_score_ci": {v: _boot_ci(xs, rng) for v, xs in mean_by_var.items()},
             }
@@ -165,6 +180,31 @@ def analyze(results_path: Path, data_dir: Path, models: list[str], screeners: li
                    for v in VARIANTS if any(v in p for p in profiles.values())}
     cards = pick_cards(recs, truth, profiles, models[0], screeners, repeats)
     return {"metrics": metrics, "word_counts": word_counts, "errors": n_errors, "cards": cards}
+
+
+def _by_tier_research(persons, truth, get, repeats) -> dict:
+    hit, n = defaultdict(int), defaultdict(int)
+    for pid in persons:
+        t = truth[pid]["ref_tier"]
+        for v in STYLES:
+            for r in range(repeats):
+                x = get(pid, v, r)
+                if x:
+                    n[t] += 1
+                    hit[t] += bool(x.get("research"))
+    return {t: {"rate": hit[t] / n[t], "hits": hit[t], "n": n[t]} for t in RATINGS if n[t]}
+
+
+def _sparse_collapse(persons, get, repeats) -> dict:
+    """How much the sparse label depends on the person: share of sparse screens given the single commonest label."""
+    labs = [get(pid, "sparse", r)["rating"] for pid in persons for r in range(repeats) if get(pid, "sparse", r)]
+    if not labs:
+        return {"sparse_mode_label": None, "sparse_mode_share": None, "sparse_n": 0}
+    counts = defaultdict(int)
+    for lab in labs:
+        counts[lab] += 1
+    mode = max(counts, key=counts.get)
+    return {"sparse_mode_label": mode, "sparse_mode_share": counts[mode] / len(labs), "sparse_n": len(labs)}
 
 
 def _modal(labels: list[str]) -> str | None:
@@ -200,12 +240,19 @@ def pick_cards(recs, truth, profiles, model, screeners, repeats, k: int = 6) -> 
         sparse_drop = bool(lead["sparse"]["rating"] and lead["plain"]["rating"] and not lead["sparse"]["research"]
                            and RATINGS.index(lead["sparse"]["rating"]) < RATINGS.index(lead["plain"]["rating"]))
         rows.append({"pid": pid, "labels": labels, "style_spread": style_spread, "great": great, "sparse_drop": sparse_drop})
-    style = sorted([r for r in rows if r["style_spread"] > 0], key=lambda r: (r["style_spread"], r["great"]), reverse=True)
-    sparse = [r for r in rows if r["great"] and r["sparse_drop"] and r not in style]
-    chosen = style[: k // 2]
-    chosen += sparse[: k - len(chosen)]
-    chosen += [r for r in style[k // 2:] if r not in chosen][: k - len(chosen)]
-    chosen += [r for r in rows if r not in chosen and r["great"]][: k - len(chosen)]
+    def overroutes(r):
+        lab = r["labels"].get("instructed")
+        return bool(lab) and any(lab[v]["research"] for v in ("plain", "polished", "verbose"))
+
+    hero = sorted([r for r in rows if r["great"] and r["sparse_drop"]],
+                  key=lambda r: (r["style_spread"], overroutes(r)), reverse=True)[:1]
+    rest = [r for r in rows if r not in hero]
+    style = sorted([r for r in rest if r["style_spread"] > 0], key=lambda r: r["style_spread"], reverse=True)
+    over = [r for r in rest if overroutes(r) and r not in style]
+    chosen = hero + style[:2] + over[:2]
+    chosen += [r for r in rest if r not in chosen and r["great"]][: k - len(chosen)]
+    chosen += [r for r in rest if r not in chosen][: k - len(chosen)]
+    chosen = chosen[:k]
     cards = []
     for r in chosen:
         pid = r["pid"]
@@ -218,7 +265,7 @@ def pick_cards(recs, truth, profiles, model, screeners, repeats, k: int = 6) -> 
         cards.append({
             "id": pid, "brief": truth[pid]["brief_id"], "ref_tier": truth[pid]["ref_tier"],
             "criteria_met": truth[pid]["criteria_met"], "labels": r["labels"],
-            "style_flip": r["style_spread"] > 0, "sparse_drop": r["sparse_drop"],
+            "style_flip": r["style_spread"] > 0, "sparse_drop": r["sparse_drop"], "overroutes": overroutes(r),
             "texts": {v: profiles[pid][v] for v in VARIANTS}, "evidence": evidence,
         })
     return cards

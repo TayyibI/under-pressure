@@ -25,7 +25,7 @@ setx ANTHROPIC_API_KEY "%ANTHROPIC_API_KEY%" >nul
 echo Saved to your Windows user environment variables.
 :have_key
 
-"%VPY%" -m twins all --quick
+"%VPY%" -m twins all --quick --yes
 if errorlevel 1 goto :failed
 if not exist "%ROOT%\run_quick\results\index.html" goto :failed
 start "" "%ROOT%\run_quick\results\index.html"
